@@ -25,7 +25,7 @@ El modelo contempla las siguientes entidades:
 - **Reservas:** con control de fecha, hora y estado (activa, cancelada).  
 
 📎 Diagrama en **dbdiagram.io**:  
-![ERD](ruta_a_imagen_del_diagrama.png)
+<img width="941" height="408" alt="Diseño Base De Datos Proyecto Inicial" src="https://github.com/user-attachments/assets/0114139a-a11d-41e6-9d71-3a09bbfd2513" />
 
 ---
 
