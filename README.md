@@ -13,7 +13,7 @@ Permitirá a los usuarios registrarse, iniciar sesión, reservar canchas en lín
 - **Frontend:** JavaScript
 - **Base de Datos:** MySQL
 - **Control de versiones:** Git + GitHub
-- **Gestión de proyecto:** Jira (SCRUM)
+- **Gestión de proyecto:** Azure (SCRUM)
 
 ---
 
