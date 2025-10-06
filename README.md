@@ -6,6 +6,8 @@
 Este proyecto tiene como objetivo desarrollar un sistema web para la **gestión de reservas de canchas deportivas**.  
 Permitirá a los usuarios registrarse, iniciar sesión, reservar canchas en línea, y a los administradores gestionar usuarios y canchas.
 
+![Prueba Proyecto Inicial ‐ Hecho con Clipchamp](https://github.com/user-attachments/assets/586f2747-2861-42a1-a555-b16e9a35e4f3)
+
 ---
 
 ## 🚀 Tecnologías utilizadas
