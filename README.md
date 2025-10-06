@@ -266,5 +266,3 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para
 ---
 
 *Última actualización: Octubre 2025*
-
-```
