@@ -1,8 +1,3 @@
-Perfecto 🚀 Te dejo el `README.md` ajustado para que el **GIF aparezca ampliado y centrado**, usando HTML en lugar de Markdown.
-
-Copia y pega directamente en tu repositorio:
-
-````markdown
 # 🏟️ Sistema de Reservas Deportivas - Plataforma Integral
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.7.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
