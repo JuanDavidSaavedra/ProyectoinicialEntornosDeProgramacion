@@ -26,7 +26,7 @@ El modelo contempla las siguientes entidades:
 
 📎 Diagrama en **dbdiagram.io**:  
 
-<img width="941" height="408" alt="Diseño Base De Datos Proyecto Inicial" src="https://github.com/user-attachments/assets/0114139a-a11d-41e6-9d71-3a09bbfd2513" />
+<img width="941" height="408" alt="Diagrama de la BD" src="https://github.com/user-attachments/assets/44b89901-667a-409d-9092-09c8432555f4" />
 
 ---
 
