@@ -9,7 +9,7 @@
 **Sistema de Reservas Deportivas** es una plataforma web completa diseñada para optimizar la gestión de instalaciones deportivas. Desarrollado como proyecto académico para la asignatura de Entornos de Programación, ofrece una solución integral que conecta administradores y usuarios en un ecosistema deportivo eficiente.
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/586f2747-2861-42a1-a555-b16e9a35e4f3" width="800" alt="Prueba Proyecto Inicial - Hecho con Clipchamp"/>
+  <img src="https://github.com/user-attachments/assets/6f4fb4e3-5c49-45f2-80f7-12f48c1b7076" width="800" alt="Prueba Proyecto Inicial - Hecho con Clipchamp"/>
 </div>
 
 ### 🎯 Objetivos Principales
