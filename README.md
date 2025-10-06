@@ -10,7 +10,7 @@ Permitirá a los usuarios registrarse, iniciar sesión, reservar canchas en lín
 
 ## 🚀 Tecnologías utilizadas
 - **Backend:** Spring Boot (Java)
-- **Frontend:** JavaScript
+- **Frontend:** HTML + CSS + JavaScript
 - **Base de Datos:** MySQL
 - **Control de versiones:** Git + GitHub
 - **Gestión de proyecto:** Azure (SCRUM)
