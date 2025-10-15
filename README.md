@@ -290,9 +290,20 @@ C:.ProyectoInicial
 
 ## 👥 Equipo de Desarrollo
 
-**Universidad** - Asignatura: Entornos de Programación
-**Estudiante**: Juan David Saavedra
-**Periodo**: 2024-1
+**Asignatura**: Entornos de Programación - Grupo E1 
+
+
+**Integrantes**: 
+
+* Juan David Saavedra González - 2214111
+
+* Yosert Alejandro Higuera Lizarazo - 2205003
+
+
+**Periodo**: 2025-2
+
+
+**Universidad Industrial de Santander**
 
 ---
 
