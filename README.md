@@ -211,7 +211,7 @@ ProyectoinicialEntornosDeProgramacion/
 
 ### 🎯 Enfoque SCRUM
 
-* **Sprints** de 2 semanas
+* **Sprints** quincenales
 * **Daily Stand-ups** virtuales
 * **Review y Retrospectiva** al final de cada sprint
 * **Azure Boards** para seguimiento de tareas
@@ -243,12 +243,6 @@ ProyectoinicialEntornosDeProgramacion/
 **Universidad** - Asignatura: Entornos de Programación
 **Estudiante**: Juan David Saavedra
 **Periodo**: 2024-1
-
----
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ---
 
