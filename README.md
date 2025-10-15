@@ -42,7 +42,6 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 
 ### **Backend**
 - **Spring Boot 3.x** - Framework principal de Java
-- **Spring Security** - Autenticación y autorización
 - **Spring Data JPA** - Persistencia de datos
 - **Maven** - Gestión de dependencias
 
