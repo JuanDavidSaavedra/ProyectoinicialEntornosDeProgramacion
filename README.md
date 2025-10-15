@@ -64,7 +64,7 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 
 ---
 
-## 🗃️ Modelo de Datos
+## 🗃️ Diseño de la Base de Datos
 
 ### Diagrama Entidad-Relación
 ![Diagrama de la Base de Datos](https://github.com/user-attachments/assets/44b89901-667a-409d-9092-09c8432555f4)
