@@ -45,7 +45,28 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1300px;
+}
+
+/* ===== CONTENEDOR DE LA PÁGINA DE BIENVENIDA ===== */
+.container.mt-5 {
+    max-width: 95%;       /* ocupa casi toda la pantalla */
+    margin-top: 2rem !important;  /* reduce el margen superior */
+    margin-bottom: 2rem;  /* agrega algo de espacio inferior */
+}
+
+@media (min-width: 1200px) {
+    .container.mt-5 {
+        max-width: 90%;   /* en pantallas grandes ocupa el 90% */
+    }
+}
+
+@media (max-width: 768px) {
+    .container.mt-5 {
+        max-width: 100%;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
 }
 
 .card {
