@@ -149,28 +149,78 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 ## 📁 Estructura del Proyecto
 
 ```
-ProyectoinicialEntornosDeProgramacion/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/
-│   │   │       └── reservas/
-│   │   │           ├── controller/
-│   │   │           ├── model/
-│   │   │           ├── repository/
-│   │   │           ├── service/
-│   │   │           └── SecurityConfig.java
-│   │   └── resources/
-│   │       ├── static/
-│   │       │   ├── css/
-│   │       │   ├── js/
-│   │       │   └── img/
-│   │       ├── templates/
-│   │       └── application.properties
-├── sql/
-│   └── script.sql
-├── pom.xml
-└── README.md
+C:.ProyectoInicial
+├───.idea
+│   └───dataSources
+│       └───1bfd48c9-f09b-4830-8320-ca3b776d8645
+│           └───storage_v2
+│               └───_src_
+│                   └───schema
+├───.mvn
+│   └───wrapper
+├───.settings
+├───src
+│   ├───main
+│   │   ├───java
+│   │   │   └───uis
+│   │   │       └───edu
+│   │   │           └───entorno
+│   │   │               └───proyecto
+│   │   │                   └───inicial
+│   │   │                       ├───config
+│   │   │                       ├───controller
+│   │   │                       ├───exception
+│   │   │                       ├───model
+│   │   │                       │   └───dto
+│   │   │                       ├───repository
+│   │   │                       └───service
+│   │   │                           └───impl
+│   │   └───resources
+│   │       ├───static
+│   │       │   ├───css
+│   │       │   ├───img
+│   │       │   └───js
+│   │       └───templates
+│   └───test
+│       └───java
+│           └───uis
+│               └───edu
+│                   └───entorno
+│                       └───proyecto
+│                           └───inicial
+└───target
+    ├───classes
+    │   ├───META-INF
+    │   │   └───maven
+    │   │       └───uis.edu.entorno.proyecto.inicial
+    │   │           └───ProyectoInicial
+    │   ├───static
+    │   │   ├───css
+    │   │   ├───img
+    │   │   └───js
+    │   └───uis
+    │       └───edu
+    │           └───entorno
+    │               └───proyecto
+    │                   └───inicial
+    │                       ├───config
+    │                       ├───controller
+    │                       ├───exception
+    │                       ├───model
+    │                       │   └───dto
+    │                       ├───repository
+    │                       └───service
+    │                           └───impl
+    ├───generated-sources
+    │   └───annotations
+    ├───generated-test-sources
+    │   └───test-annotations
+    └───test-classes
+        └───uis
+            └───edu
+                └───entorno
+                    └───proyecto
+                        └───inicial
 ```
 
 ---
