@@ -243,4 +243,3 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarYActualizarReservas();
     setInterval(verificarYActualizarReservas, 60000); // 60 segundos
 });
-
