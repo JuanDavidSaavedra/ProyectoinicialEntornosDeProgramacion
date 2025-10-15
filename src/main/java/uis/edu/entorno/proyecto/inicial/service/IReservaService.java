@@ -14,4 +14,6 @@ public interface IReservaService {
     Reserva updateEstado(Integer id, String estado);
     void delete(Integer id);
     boolean isCanchaDisponible(Integer canchaId, String fecha, String horaInicio, String horaFin);
+
+    Reserva update(Integer id, ReservaRequest reservaRequest);
 }

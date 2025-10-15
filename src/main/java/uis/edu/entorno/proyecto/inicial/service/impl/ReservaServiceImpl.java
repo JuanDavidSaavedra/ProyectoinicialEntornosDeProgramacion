@@ -60,7 +60,38 @@ public class ReservaServiceImpl implements IReservaService {
         reserva.setFecha(reservaRequest.getFecha());
         reserva.setHoraInicio(reservaRequest.getHoraInicio());
         reserva.setHoraFin(reservaRequest.getHoraFin());
+        reserva.setEstado(reservaRequest.getEstado());
 
+        return reservaRepository.save(reserva);
+    }
+
+    @Override
+    public Reserva update(Integer id, ReservaRequest reservaRequest) {
+        // Buscar la reserva existente
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        // Buscar el nuevo usuario (si aplica)
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(reservaRequest.getUsuarioId());
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+
+        // Buscar la nueva cancha (si aplica)
+        Optional<Cancha> canchaOpt = canchaRepository.findById(reservaRequest.getCanchaId());
+        if (canchaOpt.isEmpty()) {
+            throw new RuntimeException("Cancha no encontrada");
+        }
+
+        // Actualizar campos
+        reserva.setUsuario(usuarioOpt.get());
+        reserva.setCancha(canchaOpt.get());
+        reserva.setFecha(reservaRequest.getFecha());
+        reserva.setHoraInicio(reservaRequest.getHoraInicio());
+        reserva.setHoraFin(reservaRequest.getHoraFin());
+        reserva.setEstado(reservaRequest.getEstado());
+
+        // Guardar cambios
         return reservaRepository.save(reserva);
     }
 

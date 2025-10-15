@@ -164,28 +164,83 @@ async function guardarReserva(e) {
         canchaId: parseInt(document.getElementById('canchaId').value),
         fecha: document.getElementById('fecha').value,
         horaInicio: document.getElementById('horaInicio').value,
-        horaFin: document.getElementById('horaFin').value
+        horaFin: document.getElementById('horaFin').value,
+        estado: document.getElementById('estado') ? document.getElementById('estado').value : 'ACTIVA'
     };
 
     const reservaId = document.getElementById('reservaId').value;
 
     try {
         if (reservaId) {
-            // Para editar, usamos el endpoint de actualización de estado
-            await RequestHelper.put(`/reservas/${reservaId}/estado`, document.getElementById('estado').value);
+            // Usar el endpoint de actualización completa (PUT /reservas/{id})
+            await RequestHelper.put(`/reservas/${reservaId}`, reservaData);
             alert('Reserva actualizada correctamente');
         } else {
             await RequestHelper.post('/reservas', reservaData);
             alert('Reserva creada correctamente');
         }
 
-        window.location.href = 'reservas.html';
+        // Si estamos en un iframe, recargamos el iframe para que la lista se actualice
+        if (window.top !== window.self) {
+            window.top.document.querySelector('iframe[name="myFrame"]').src = 'reservas.html';
+        } else {
+            window.location.href = 'reservas.html';
+        }
     } catch (error) {
         alert('Error al guardar reserva: ' + error.message);
     }
 }
 
+
 // Solo cargar usuarios y canchas si estamos en el formulario de reservas
 if (document.getElementById('reservaForm')) {
     document.addEventListener('DOMContentLoaded', cargarUsuariosYCanchas);
 }
+
+// =========================
+// 🔄 Verificar y actualizar estado automáticamente
+// =========================
+async function verificarYActualizarReservas() {
+    try {
+        const response = await RequestHelper.get('/reservas');
+        const reservas = response.data;
+
+        const ahora = new Date();
+
+        for (const reserva of reservas) {
+            if (reserva.estado === 'ACTIVA') {
+                const fechaHoraFin = new Date(`${reserva.fecha}T${reserva.horaFin}`);
+
+                if (ahora > fechaHoraFin) {
+                    try {
+                        await RequestHelper.put(`/reservas/${reserva.id}`, {
+                            usuarioId: reserva.usuario.id,
+                            canchaId: reserva.cancha.id,
+                            fecha: reserva.fecha,
+                            horaInicio: reserva.horaInicio,
+                            horaFin: reserva.horaFin,
+                            estado: 'CANCELADA'
+                        });
+                        console.log(`✅ Reserva ${reserva.id} actualizada a CANCELADA automáticamente`);
+                    } catch (error) {
+                        console.error(`❌ Error al actualizar la reserva ${reserva.id}:`, error);
+                    }
+                }
+            }
+        }
+
+        // Refrescar la tabla si estamos en la lista
+        if (document.getElementById('tablaReservas')) {
+            cargarReservas();
+        }
+    } catch (error) {
+        console.error('Error al verificar reservas:', error);
+    }
+}
+
+// Ejecutar verificación al cargar y cada 1 minuto
+document.addEventListener('DOMContentLoaded', () => {
+    verificarYActualizarReservas();
+    setInterval(verificarYActualizarReservas, 60000); // 60 segundos
+});
+
