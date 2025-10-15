@@ -4,6 +4,10 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Azure
+
+https://dev.azure.com/reservadechanchas/
+
 ## 📖 Descripción del Proyecto
 
 **Sistema de Reservas Deportivas** es una plataforma web completa diseñada para optimizar la gestión de instalaciones deportivas. Desarrollado como proyecto académico para la asignatura de Entornos de Programación, ofrece una solución integral que conecta administradores y usuarios en un ecosistema deportivo eficiente.
@@ -42,7 +46,6 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 
 ### **Backend**
 - **Spring Boot 3.x** - Framework principal de Java
-- **Spring Security** - Autenticación y autorización
 - **Spring Data JPA** - Persistencia de datos
 - **Maven** - Gestión de dependencias
 
@@ -64,7 +67,7 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 
 ---
 
-## 🗃️ Modelo de Datos
+## 🗃️ Diseño de la Base de Datos
 
 ### Diagrama Entidad-Relación
 ![Diagrama de la Base de Datos](https://github.com/user-attachments/assets/44b89901-667a-409d-9092-09c8432555f4)
@@ -149,28 +152,78 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 ## 📁 Estructura del Proyecto
 
 ```
-ProyectoinicialEntornosDeProgramacion/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/
-│   │   │       └── reservas/
-│   │   │           ├── controller/
-│   │   │           ├── model/
-│   │   │           ├── repository/
-│   │   │           ├── service/
-│   │   │           └── SecurityConfig.java
-│   │   └── resources/
-│   │       ├── static/
-│   │       │   ├── css/
-│   │       │   ├── js/
-│   │       │   └── img/
-│   │       ├── templates/
-│   │       └── application.properties
-├── sql/
-│   └── script.sql
-├── pom.xml
-└── README.md
+C:.ProyectoInicial
+├───.idea
+│   └───dataSources
+│       └───1bfd48c9-f09b-4830-8320-ca3b776d8645
+│           └───storage_v2
+│               └───_src_
+│                   └───schema
+├───.mvn
+│   └───wrapper
+├───.settings
+├───src
+│   ├───main
+│   │   ├───java
+│   │   │   └───uis
+│   │   │       └───edu
+│   │   │           └───entorno
+│   │   │               └───proyecto
+│   │   │                   └───inicial
+│   │   │                       ├───config
+│   │   │                       ├───controller
+│   │   │                       ├───exception
+│   │   │                       ├───model
+│   │   │                       │   └───dto
+│   │   │                       ├───repository
+│   │   │                       └───service
+│   │   │                           └───impl
+│   │   └───resources
+│   │       ├───static
+│   │       │   ├───css
+│   │       │   ├───img
+│   │       │   └───js
+│   │       └───templates
+│   └───test
+│       └───java
+│           └───uis
+│               └───edu
+│                   └───entorno
+│                       └───proyecto
+│                           └───inicial
+└───target
+    ├───classes
+    │   ├───META-INF
+    │   │   └───maven
+    │   │       └───uis.edu.entorno.proyecto.inicial
+    │   │           └───ProyectoInicial
+    │   ├───static
+    │   │   ├───css
+    │   │   ├───img
+    │   │   └───js
+    │   └───uis
+    │       └───edu
+    │           └───entorno
+    │               └───proyecto
+    │                   └───inicial
+    │                       ├───config
+    │                       ├───controller
+    │                       ├───exception
+    │                       ├───model
+    │                       │   └───dto
+    │                       ├───repository
+    │                       └───service
+    │                           └───impl
+    ├───generated-sources
+    │   └───annotations
+    ├───generated-test-sources
+    │   └───test-annotations
+    └───test-classes
+        └───uis
+            └───edu
+                └───entorno
+                    └───proyecto
+                        └───inicial
 ```
 
 ---
@@ -240,9 +293,20 @@ ProyectoinicialEntornosDeProgramacion/
 
 ## 👥 Equipo de Desarrollo
 
-**Universidad** - Asignatura: Entornos de Programación
-**Estudiante**: Juan David Saavedra
-**Periodo**: 2024-1
+**Asignatura**: Entornos de Programación - Grupo E1 
+
+
+**Integrantes**: 
+
+* Juan David Saavedra González - 2214111
+
+* Yosert Alejandro Higuera Lizarazo - 2205003
+
+
+**Periodo**: 2025-2
+
+
+**Universidad Industrial de Santander**
 
 ---
 
