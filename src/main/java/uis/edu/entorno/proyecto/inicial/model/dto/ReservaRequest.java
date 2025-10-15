@@ -9,6 +9,7 @@ public class ReservaRequest {
     private LocalDate fecha;
     private LocalTime horaInicio;
     private LocalTime horaFin;
+    private String estado; // agregado
 
     // Constructores
     public ReservaRequest() {}
@@ -20,6 +21,16 @@ public class ReservaRequest {
         this.fecha = fecha;
         this.horaInicio = horaInicio;
         this.horaFin = horaFin;
+    }
+
+    public ReservaRequest(Integer usuarioId, Integer canchaId, LocalDate fecha,
+                          LocalTime horaInicio, LocalTime horaFin, String estado) {
+        this.usuarioId = usuarioId;
+        this.canchaId = canchaId;
+        this.fecha = fecha;
+        this.horaInicio = horaInicio;
+        this.horaFin = horaFin;
+        this.estado = estado;
     }
 
     // Getters y Setters
@@ -37,4 +48,8 @@ public class ReservaRequest {
 
     public LocalTime getHoraFin() { return horaFin; }
     public void setHoraFin(LocalTime horaFin) { this.horaFin = horaFin; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 }
+

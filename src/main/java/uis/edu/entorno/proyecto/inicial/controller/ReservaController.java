@@ -94,4 +94,15 @@ public class ReservaController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Error al eliminar reserva: " + e.getMessage()));
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse> updateReserva(@PathVariable Integer id, @RequestBody ReservaRequest reservaRequest) {
+        try {
+            Reserva reservaActualizada = reservaService.update(id, reservaRequest);
+            return ResponseEntity.ok(ApiResponse.success("Reserva actualizada exitosamente", reservaActualizada));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al actualizar reserva: " + e.getMessage()));
+        }
+    }
+
 }
