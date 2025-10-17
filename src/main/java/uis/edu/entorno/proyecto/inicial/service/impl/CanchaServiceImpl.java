@@ -53,11 +53,8 @@ public class CanchaServiceImpl implements ICanchaService {
     @Override
     @Transactional
     public void delete(Integer id) {
-        // Eliminar todas las reservas asociadas a la cancha primero
         List<Reserva> reservasCancha = reservaRepository.findByCanchaId(id);
         reservaRepository.deleteAll(reservasCancha);
-
-        // Luego eliminar la cancha
         canchaRepository.deleteById(id);
     }
 }

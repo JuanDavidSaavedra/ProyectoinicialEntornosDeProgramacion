@@ -678,14 +678,14 @@ iframe {
 }
 
 /* Dispositivos grandes (≥992px) */
-@media (min-width: 992px) and (max-width: 1199.98px) {
+@media (min-width: 992px) and (max-width: 1200px) {
     .container {
         max-width: 960px;
     }
 }
 
 /* Tablets (≥768px) */
-@media (min-width: 768px) and (max-width: 991.98px) {
+@media (min-width: 768px) and (max-width: 992px) {
     .container {
         max-width: 720px;
         padding-left: 1.5rem;
@@ -710,7 +710,7 @@ iframe {
 }
 
 /* Dispositivos móviles (≥576px) */
-@media (min-width: 576px) and (max-width: 767.98px) {
+@media (min-width: 576px) and (max-width: 768px) {
     .container {
         max-width: 540px;
         padding-left: 1rem;
@@ -756,7 +756,7 @@ iframe {
 }
 
 /* Dispositivos muy pequeños (<576px) */
-@media (max-width: 575.98px) {
+@media (max-width: 576px) {
     .container {
         width: 100%;
         padding-left: 0.75rem;
@@ -852,7 +852,7 @@ iframe {
 }
 
 /* Orientación landscape en móviles */
-@media (max-width: 767.98px) and (orientation: landscape) {
+@media (max-width: 768px) and (orientation: landscape) {
     .login-body {
         padding: 0.5rem;
     }

@@ -78,7 +78,7 @@ async function cargarCanchas() {
         canchas.forEach(cancha => {
             const tr = document.createElement('tr');
 
-            let accionesHTML = '';
+            let accionesHTML;
             if (isAdmin) {
                 accionesHTML = `
                     <a href="form_canchas.html?id=${cancha.id}" class="btn btn-sm btn-warning">Editar</a>
@@ -111,7 +111,7 @@ async function eliminarCancha(id) {
     if (confirm('¿Está seguro de eliminar esta cancha? Se eliminarán también todas las reservas asociadas.')) {
         try {
             await RequestHelper.delete(`/canchas/${id}`);
-            cargarCanchas();
+            await cargarCanchas();
         } catch (error) {
             alert('Error al eliminar cancha: ' + error.message);
         }

@@ -31,7 +31,7 @@ public class ReservaServiceImpl implements IReservaService {
     private CanchaRepository canchaRepository;
 
     // Formatter para horas en formato 12h
-    private DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
 
     @Override
     public List<Reserva> findAll() {
@@ -120,12 +120,11 @@ public class ReservaServiceImpl implements IReservaService {
         return reservaRepository.save(reserva);
     }
 
-    // Método auxiliar para formatear horas a formato 12h
+    // Metodo auxiliar para formatear horas a formato 12h
     private String formatTimeTo12Hours(LocalTime time) {
         return time.format(timeFormatter).replace("AM", "a. m.").replace("PM", "p. m.");
     }
 
-    // ... resto de los métodos se mantienen igual ...
     private boolean isDentroHorarioAtencion(Cancha cancha, LocalTime horaInicio, LocalTime horaFin) {
         return !horaInicio.isBefore(cancha.getHoraApertura()) &&
                 !horaFin.isAfter(cancha.getHoraCierre()) &&

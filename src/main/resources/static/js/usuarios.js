@@ -65,7 +65,7 @@ async function cargarUsuarios() {
         usuarios.forEach(usuario => {
             const tr = document.createElement('tr');
 
-            let accionesHTML = '';
+            let accionesHTML;
             if (isAdmin) {
                 accionesHTML = `
                     <a href="form_usuarios.html?id=${usuario.id}" class="btn btn-sm btn-warning">Editar</a>

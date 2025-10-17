@@ -12,9 +12,8 @@ import java.util.List;
 public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
     List<Reserva> findByUsuarioId(Integer usuarioId);
     List<Reserva> findByCanchaId(Integer canchaId);
-    List<Reserva> findByFecha(LocalDate fecha);
+
     List<Reserva> findByEstado(String estado);
-    List<Reserva> findByCanchaIdAndFecha(Integer canchaId, LocalDate fecha);
 
     // Método para verificar disponibilidad
     @Query("SELECT r FROM Reserva r WHERE r.cancha.id = ?1 AND r.fecha = ?2 AND r.horaInicio < ?3 AND r.horaFin > ?4 AND r.estado != ?5")
@@ -27,11 +26,4 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
 
     List<Reserva> findAllByOrderByIdAsc();
 
-    // Para ordenamiento personalizado
-    @Query("SELECT r FROM Reserva r ORDER BY " +
-            "CASE WHEN r.estado = 'ACTIVA' THEN 1 " +
-            "WHEN r.estado = 'FINALIZADA' THEN 2 " +
-            "WHEN r.estado = 'CANCELADA' THEN 3 ELSE 4 END, " +
-            "r.fecha ASC, r.horaInicio ASC")
-    List<Reserva> findAllOrderByEstadoAndFecha();
 }

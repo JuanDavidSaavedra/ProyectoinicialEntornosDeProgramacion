@@ -81,7 +81,7 @@ async function cargarReservas() {
 
             // TODOS los usuarios pueden editar/eliminar SUS PROPIAS reservas
             // Los administradores pueden editar/eliminar TODAS las reservas
-            let accionesHTML = '';
+            let accionesHTML;
             if (isAdmin || reserva.usuarioId === currentUser.id) {
                 accionesHTML = `
                     <a href="form_reservas.html?id=${reserva.id}" class="btn btn-sm btn-warning">Editar</a>
@@ -251,8 +251,6 @@ async function actualizarCuposDisponibles() {
         document.getElementById('cuposDisponiblesInfo').style.display = 'none';
     }
 }
-
-// ... resto del código se mantiene igual ...
 
 async function cargarReserva(id) {
     try {

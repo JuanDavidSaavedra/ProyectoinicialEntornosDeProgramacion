@@ -31,11 +31,7 @@ public class CanchaController {
     public ResponseEntity<ApiResponse> getCanchaById(@PathVariable Integer id) {
         try {
             Optional<Cancha> cancha = canchaService.findById(id);
-            if (cancha.isPresent()) {
-                return ResponseEntity.ok(ApiResponse.success("Cancha encontrada", cancha.get()));
-            } else {
-                return ResponseEntity.ok(ApiResponse.error("Cancha no encontrada"));
-            }
+            return cancha.map(value -> ResponseEntity.ok(ApiResponse.success("Cancha encontrada", value))).orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Cancha no encontrada")));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Error al buscar cancha: " + e.getMessage()));
         }
@@ -74,7 +70,7 @@ public class CanchaController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse> updateCancha(@PathVariable Integer id, @RequestBody Cancha cancha) {
         try {
-            if (!canchaService.findById(id).isPresent()) {
+            if (canchaService.findById(id).isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Cancha no encontrada"));
             }
             cancha.setId(id);
@@ -88,7 +84,7 @@ public class CanchaController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> deleteCancha(@PathVariable Integer id) {
         try {
-            if (!canchaService.findById(id).isPresent()) {
+            if (canchaService.findById(id).isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Cancha no encontrada"));
             }
             canchaService.delete(id);

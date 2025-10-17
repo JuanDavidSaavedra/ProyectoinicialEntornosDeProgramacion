@@ -31,11 +31,7 @@ public class UsuarioController {
     public ResponseEntity<ApiResponse> getUsuarioById(@PathVariable Integer id) {
         try {
             Optional<Usuario> usuario = usuarioService.findById(id);
-            if (usuario.isPresent()) {
-                return ResponseEntity.ok(ApiResponse.success("Usuario encontrado", usuario.get()));
-            } else {
-                return ResponseEntity.ok(ApiResponse.error("Usuario no encontrado"));
-            }
+            return usuario.map(value -> ResponseEntity.ok(ApiResponse.success("Usuario encontrado", value))).orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Usuario no encontrado")));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Error al buscar usuario: " + e.getMessage()));
         }
@@ -45,11 +41,7 @@ public class UsuarioController {
     public ResponseEntity<ApiResponse> getUsuarioByCedula(@PathVariable String cedula) {
         try {
             Optional<Usuario> usuario = usuarioService.findByCedula(cedula);
-            if (usuario.isPresent()) {
-                return ResponseEntity.ok(ApiResponse.success("Usuario encontrado", usuario.get()));
-            } else {
-                return ResponseEntity.ok(ApiResponse.error("Usuario no encontrado"));
-            }
+            return usuario.map(value -> ResponseEntity.ok(ApiResponse.success("Usuario encontrado", value))).orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Usuario no encontrado")));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Error al buscar usuario: " + e.getMessage()));
         }
@@ -99,7 +91,7 @@ public class UsuarioController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse> updateUsuario(@PathVariable Integer id, @RequestBody Usuario usuario) {
         try {
-            if (!usuarioService.findById(id).isPresent()) {
+            if (usuarioService.findById(id).isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Usuario no encontrado"));
             }
 
@@ -150,7 +142,7 @@ public class UsuarioController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> deleteUsuario(@PathVariable Integer id) {
         try {
-            if (!usuarioService.findById(id).isPresent()) {
+            if (usuarioService.findById(id).isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Usuario no encontrado"));
             }
             usuarioService.delete(id);

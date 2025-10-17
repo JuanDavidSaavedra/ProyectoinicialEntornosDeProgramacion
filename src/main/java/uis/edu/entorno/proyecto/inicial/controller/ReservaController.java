@@ -14,7 +14,6 @@ import uis.edu.entorno.proyecto.inicial.repository.CanchaRepository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.HashMap;
@@ -33,8 +32,6 @@ public class ReservaController {
 
     @Autowired
     private CanchaRepository canchaRepository;
-
-    private DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
 
     private ReservaResponse mapToResponse(Reserva r) {
         return new ReservaResponse(
@@ -78,12 +75,12 @@ public class ReservaController {
     }
 
     private int getEstadoPriority(String estado) {
-        switch (estado) {
-            case "ACTIVA": return 1;
-            case "FINALIZADA": return 2;
-            case "CANCELADA": return 3;
-            default: return 4;
-        }
+        return switch (estado) {
+            case "ACTIVA" -> 1;
+            case "FINALIZADA" -> 2;
+            case "CANCELADA" -> 3;
+            default -> 4;
+        };
     }
 
     @GetMapping("/{id}")
@@ -130,7 +127,7 @@ public class ReservaController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> deleteReserva(@PathVariable Integer id) {
         try {
-            if (!reservaService.findById(id).isPresent()) {
+            if (reservaService.findById(id).isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Reserva no encontrada"));
             }
             reservaService.delete(id);
@@ -184,4 +181,5 @@ public class ReservaController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Error al obtener cupos: " + e.getMessage()));
         }
     }
+
 }

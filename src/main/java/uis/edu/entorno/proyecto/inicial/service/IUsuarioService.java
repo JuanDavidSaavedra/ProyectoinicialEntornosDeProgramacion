@@ -15,5 +15,5 @@ public interface IUsuarioService {
     void delete(Integer id);
     boolean existsByCedula(String cedula);
     boolean existsByEmail(String email);
-    boolean existsByUsuario(String usuario); // AGREGAR ESTE MÉTODO
+    boolean existsByUsuario(String usuario);
 }
