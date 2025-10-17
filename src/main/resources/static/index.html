@@ -22,7 +22,7 @@
         .login-page {
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: block; /* 🔹 antes era flex, lo cambiamos para permitir scroll */
+            display: block;
             padding: 2rem 0;
         }
 
@@ -123,11 +123,35 @@
             color: #2c3e50;
         }
 
+        /* CREDENCIALES DEMO - AJUSTADAS PARA CONTRASEÑA LARGA */
         .demo-credentials {
             background: #f8f9fa;
             border-radius: 10px;
-            padding: 1.2rem;
+            padding: 1.5rem;
             margin-top: 1.5rem;
+        }
+
+        .credential-item {
+            cursor: pointer;
+            padding: 0.8rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            margin-bottom: 0.5rem;
+        }
+
+        .credential-item:hover {
+            background-color: rgba(0,0,0,0.03);
+        }
+
+        .credential-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .long-password {
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.3;
         }
 
         footer {
@@ -172,6 +196,24 @@
                 width: 100%;
                 font-size: 1.15rem;
                 padding: 0.9rem 1.5rem;
+            }
+
+            .demo-credentials {
+                padding: 1.2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .demo-credentials {
+                padding: 1rem;
+            }
+
+            .credential-item {
+                padding: 0.6rem;
+            }
+
+            .long-password {
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -264,7 +306,7 @@
                                         </label>
                                         <input id="icon_pass" type="password" name="password"
                                                class="form-control form-control-lg"
-                                               placeholder="Ingresa tu contraseña" required value="$2a$10$yourEncryptedPasswordHash">
+                                               placeholder="Ingresa tu contraseña" required value="123">
                                     </div>
 
                                     <div class="d-grid">
@@ -274,20 +316,25 @@
                                     </div>
                                 </form>
 
-                                <!-- Credenciales demo -->
+                                <!-- Credenciales demo - AJUSTADAS PARA CONTRASEÑA LARGA -->
                                 <div class="demo-credentials">
                                     <div class="text-center">
-                                        <small class="text-muted d-block mb-2"><strong>Credenciales de Prueba</strong></small>
+                                        <small class="text-muted d-block mb-3"><strong>Credenciales de Prueba</strong></small>
                                         <div class="row">
-                                            <div class="col-md-6 mb-2 mb-md-0">
-                                                <small class="fw-semibold text-dark">Administrador</small><br>
-                                                <small>usuario: <strong>admin</strong></small><br>
-                                                <small>contraseña: <strong>$2a$10$yourEncryptedPasswordHash</strong></small>
+                                            <div class="col-md-6 mb-3 mb-md-0">
+                                                <div class="credential-item" data-user="admin" data-password="123">
+                                                    <small class="fw-semibold text-dark d-block mb-1">Administrador</small>
+                                                    <small class="d-block">usuario: <strong>admin</strong></small>
+                                                    <small class="d-block">contraseña: <strong>123</strong></small>
+                                                </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <small class="fw-semibold text-dark">Usuario Normal</small><br>
-                                                <small>usuario: <strong>mariagonz</strong></small><br>
-                                                <small>contraseña: <strong>$2a$10$yourEncryptedPasswordHash</strong></small>
+                                                <div class="credential-item" data-user="mariagonz" data-password="$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345">
+                                                    <small class="fw-semibold text-dark d-block mb-1">Usuario Normal</small>
+                                                    <small class="d-block">usuario: <strong>mariagonz</strong></small>
+                                                    <small class="d-block">contraseña:</small>
+                                                    <small class="long-password d-block mt-1"><strong>$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345</strong></small>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -349,6 +396,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="js/request.js"></script>
 <script src="js/login.js"></script>
+
+<script>
+    // Configurar autocompletado de formulario al hacer clic en credenciales
+    document.addEventListener('DOMContentLoaded', function() {
+        const credentialItems = document.querySelectorAll('.credential-item');
+
+        credentialItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const user = this.getAttribute('data-user');
+                const password = this.getAttribute('data-password');
+
+                document.getElementById('icon_user').value = user;
+                document.getElementById('icon_pass').value = password;
+            });
+        });
+    });
+</script>
 </body>
 </html>
-

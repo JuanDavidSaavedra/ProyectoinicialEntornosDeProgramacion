@@ -10,6 +10,11 @@ import uis.edu.entorno.proyecto.inicial.repository.CanchaRepository;
 import uis.edu.entorno.proyecto.inicial.service.IReservaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +29,9 @@ public class ReservaServiceImpl implements IReservaService {
 
     @Autowired
     private CanchaRepository canchaRepository;
+
+    // Formatter para horas en formato 12h
+    private DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
 
     @Override
     public List<Reserva> findAll() {
@@ -46,74 +54,159 @@ public class ReservaServiceImpl implements IReservaService {
     }
 
     @Override
+    @Transactional
     public Reserva create(ReservaRequest reservaRequest) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(reservaRequest.getUsuarioId());
-        Optional<Cancha> canchaOpt = canchaRepository.findById(reservaRequest.getCanchaId());
+        Usuario usuario = usuarioRepository.findById(reservaRequest.getUsuarioId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Cancha cancha = canchaRepository.findById(reservaRequest.getCanchaId())
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
 
-        if (usuarioOpt.isEmpty() || canchaOpt.isEmpty()) {
-            throw new RuntimeException("Usuario o cancha no encontrados");
+        // Validar horario de atención de la cancha
+        if (!isDentroHorarioAtencion(cancha, reservaRequest.getHoraInicio(), reservaRequest.getHoraFin())) {
+            String horaAperturaFormatted = formatTimeTo12Hours(cancha.getHoraApertura());
+            String horaCierreFormatted = formatTimeTo12Hours(cancha.getHoraCierre());
+            throw new RuntimeException("El horario de reserva está fuera del horario de atención de la cancha. " +
+                    "Horario de atención: " + horaAperturaFormatted + " - " + horaCierreFormatted);
+        }
+
+        // Verificar capacidad de la cancha
+        if (!isCanchaDisponible(reservaRequest.getCanchaId(), reservaRequest.getFecha(),
+                reservaRequest.getHoraInicio(), reservaRequest.getHoraFin())) {
+            throw new RuntimeException("Capacidad máxima alcanzada para esta cancha en el horario seleccionado. Reserve otra cancha o cambie la hora.");
         }
 
         Reserva reserva = new Reserva();
-        reserva.setUsuario(usuarioOpt.get());
-        reserva.setCancha(canchaOpt.get());
+        reserva.setUsuario(usuario);
+        reserva.setCancha(cancha);
         reserva.setFecha(reservaRequest.getFecha());
         reserva.setHoraInicio(reservaRequest.getHoraInicio());
         reserva.setHoraFin(reservaRequest.getHoraFin());
-        reserva.setEstado(reservaRequest.getEstado());
+        reserva.setEstado(reservaRequest.getEstado() != null ? reservaRequest.getEstado() : "ACTIVA");
 
         return reservaRepository.save(reserva);
     }
 
     @Override
+    @Transactional
     public Reserva update(Integer id, ReservaRequest reservaRequest) {
-        // Buscar la reserva existente
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
 
-        // Buscar el nuevo usuario (si aplica)
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(reservaRequest.getUsuarioId());
-        if (usuarioOpt.isEmpty()) {
-            throw new RuntimeException("Usuario no encontrado");
+        Cancha cancha = canchaRepository.findById(reservaRequest.getCanchaId())
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
+
+        // Validar horario de atención de la cancha
+        if (!isDentroHorarioAtencion(cancha, reservaRequest.getHoraInicio(), reservaRequest.getHoraFin())) {
+            String horaAperturaFormatted = formatTimeTo12Hours(cancha.getHoraApertura());
+            String horaCierreFormatted = formatTimeTo12Hours(cancha.getHoraCierre());
+            throw new RuntimeException("El horario de reserva está fuera del horario de atención de la cancha. " +
+                    "Horario de atención: " + horaAperturaFormatted + " - " + horaCierreFormatted);
         }
 
-        // Buscar la nueva cancha (si aplica)
-        Optional<Cancha> canchaOpt = canchaRepository.findById(reservaRequest.getCanchaId());
-        if (canchaOpt.isEmpty()) {
-            throw new RuntimeException("Cancha no encontrada");
+        // Verificar capacidad de la cancha (excluyendo la reserva actual)
+        if (!isCanchaDisponibleForUpdate(id, reservaRequest.getCanchaId(), reservaRequest.getFecha(),
+                reservaRequest.getHoraInicio(), reservaRequest.getHoraFin())) {
+            throw new RuntimeException("Capacidad máxima alcanzada para esta cancha en el horario seleccionado. Reserve otra cancha o cambie la hora.");
         }
 
-        // Actualizar campos
-        reserva.setUsuario(usuarioOpt.get());
-        reserva.setCancha(canchaOpt.get());
+        reserva.setUsuario(usuarioRepository.findById(reservaRequest.getUsuarioId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
+        reserva.setCancha(cancha);
         reserva.setFecha(reservaRequest.getFecha());
         reserva.setHoraInicio(reservaRequest.getHoraInicio());
         reserva.setHoraFin(reservaRequest.getHoraFin());
         reserva.setEstado(reservaRequest.getEstado());
 
-        // Guardar cambios
         return reservaRepository.save(reserva);
     }
 
-    @Override
-    public Reserva updateEstado(Integer id, String estado) {
-        Optional<Reserva> reservaOpt = reservaRepository.findById(id);
-        if (reservaOpt.isPresent()) {
-            Reserva reserva = reservaOpt.get();
-            reserva.setEstado(estado);
-            return reservaRepository.save(reserva);
-        }
-        throw new RuntimeException("Reserva no encontrada");
+    // Método auxiliar para formatear horas a formato 12h
+    private String formatTimeTo12Hours(LocalTime time) {
+        return time.format(timeFormatter).replace("AM", "a. m.").replace("PM", "p. m.");
+    }
+
+    // ... resto de los métodos se mantienen igual ...
+    private boolean isDentroHorarioAtencion(Cancha cancha, LocalTime horaInicio, LocalTime horaFin) {
+        return !horaInicio.isBefore(cancha.getHoraApertura()) &&
+                !horaFin.isAfter(cancha.getHoraCierre()) &&
+                !horaInicio.isAfter(horaFin);
+    }
+
+    private boolean isCanchaDisponible(Integer canchaId, LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
+        Cancha cancha = canchaRepository.findById(canchaId)
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
+
+        List<Reserva> reservasSolapadas = reservaRepository
+                .findByCanchaIdAndFechaAndHoraInicioLessThanAndHoraFinGreaterThanAndEstadoNot(
+                        canchaId, fecha, horaFin, horaInicio, "CANCELADA");
+
+        return reservasSolapadas.size() < cancha.getCapacidad();
+    }
+
+    private boolean isCanchaDisponibleForUpdate(Integer reservaId, Integer canchaId, LocalDate fecha,
+                                                LocalTime horaInicio, LocalTime horaFin) {
+        Cancha cancha = canchaRepository.findById(canchaId)
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
+
+        List<Reserva> reservasSolapadas = reservaRepository
+                .findByCanchaIdAndFechaAndHoraInicioLessThanAndHoraFinGreaterThanAndEstadoNotAndIdNot(
+                        canchaId, fecha, horaFin, horaInicio, "CANCELADA", reservaId);
+
+        return reservasSolapadas.size() < cancha.getCapacidad();
     }
 
     @Override
-    public void delete(Integer id) {
-        reservaRepository.deleteById(id);
+    public void actualizarEstadosAutomaticamente() {
+        List<Reserva> reservasActivas = reservaRepository.findByEstado("ACTIVA");
+        LocalDate hoy = LocalDate.now();
+
+        for (Reserva reserva : reservasActivas) {
+            if (reserva.getFecha().isBefore(hoy) ||
+                    (reserva.getFecha().equals(hoy) && reserva.getHoraFin().isBefore(LocalTime.now()))) {
+                reserva.setEstado("FINALIZADA");
+                reservaRepository.save(reserva);
+            }
+        }
     }
 
     @Override
     public boolean isCanchaDisponible(Integer canchaId, String fecha, String horaInicio, String horaFin) {
-        // Implementación simplificada - en producción validar superposición de horarios
         return true;
+    }
+
+    @Override
+    public Reserva updateEstado(Integer id, String estado) {
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+        reserva.setEstado(estado);
+        return reservaRepository.save(reserva);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Integer id) {
+        reservaRepository.deleteById(id);
+        reasignarIdsReservas();
+    }
+
+    private void reasignarIdsReservas() {
+        List<Reserva> reservas = reservaRepository.findAllByOrderByIdAsc();
+        int nuevoId = 1;
+        for (Reserva reserva : reservas) {
+            if (!reserva.getId().equals(nuevoId)) {
+                Reserva nuevaReserva = new Reserva();
+                nuevaReserva.setUsuario(reserva.getUsuario());
+                nuevaReserva.setCancha(reserva.getCancha());
+                nuevaReserva.setFecha(reserva.getFecha());
+                nuevaReserva.setHoraInicio(reserva.getHoraInicio());
+                nuevaReserva.setHoraFin(reserva.getHoraFin());
+                nuevaReserva.setEstado(reserva.getEstado());
+                nuevaReserva.setCreadoEn(reserva.getCreadoEn());
+
+                reservaRepository.save(nuevaReserva);
+                reservaRepository.delete(reserva);
+            }
+            nuevoId++;
+        }
     }
 }

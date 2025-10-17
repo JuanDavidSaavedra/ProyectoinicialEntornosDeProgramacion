@@ -16,6 +16,16 @@
             <form id="reservaForm">
                 <input type="hidden" id="reservaId">
 
+                <!-- Información de horario de atención -->
+                <div class="alert alert-info" id="horarioAtencionInfo" style="display: none;">
+                    <!-- Aquí se mostrará el horario de atención de la cancha seleccionada -->
+                </div>
+
+                <!-- Información de cupos disponibles -->
+                <div class="alert alert-success" id="cuposDisponiblesInfo" style="display: none;">
+                    <!-- Aquí se mostrarán los cupos disponibles -->
+                </div>
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="usuarioId" class="form-label">Usuario *</label>
@@ -51,6 +61,7 @@
                         <label for="estado" class="form-label">Estado *</label>
                         <select class="form-select" id="estado" required>
                             <option value="ACTIVA">Activa</option>
+                            <option value="FINALIZADA">Finalizada</option>
                             <option value="CANCELADA">Cancelada</option>
                         </select>
                     </div>

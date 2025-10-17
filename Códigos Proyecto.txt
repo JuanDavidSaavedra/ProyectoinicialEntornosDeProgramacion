@@ -1,0 +1,3824 @@
+Códigos Proyecto:
+
+CorsConfig.java:
+package uis.edu.entorno.proyecto.inicial.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig {
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins("*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*");
+            }
+        };
+    }
+}
+
+
+CanchaController.java:
+package uis.edu.entorno.proyecto.inicial.controller;
+
+import uis.edu.entorno.proyecto.inicial.model.Cancha;
+import uis.edu.entorno.proyecto.inicial.model.dto.ApiResponse;
+import uis.edu.entorno.proyecto.inicial.service.ICanchaService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/canchas")
+@CrossOrigin(origins = "*")
+public class CanchaController {
+
+    @Autowired
+    private ICanchaService canchaService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse> getAllCanchas() {
+        try {
+            List<Cancha> canchas = canchaService.findAll();
+            return ResponseEntity.ok(ApiResponse.success("Canchas obtenidas exitosamente", canchas));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al obtener canchas: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse> getCanchaById(@PathVariable Integer id) {
+        try {
+            Optional<Cancha> cancha = canchaService.findById(id);
+            if (cancha.isPresent()) {
+                return ResponseEntity.ok(ApiResponse.success("Cancha encontrada", cancha.get()));
+            } else {
+                return ResponseEntity.ok(ApiResponse.error("Cancha no encontrada"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al buscar cancha: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/deporte/{deporte}")
+    public ResponseEntity<ApiResponse> getCanchasByDeporte(@PathVariable String deporte) {
+        try {
+            List<Cancha> canchas = canchaService.findByDeporte(deporte);
+            return ResponseEntity.ok(ApiResponse.success("Canchas obtenidas exitosamente", canchas));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al obtener canchas: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/estado/{estado}")
+    public ResponseEntity<ApiResponse> getCanchasByEstado(@PathVariable String estado) {
+        try {
+            List<Cancha> canchas = canchaService.findByEstado(estado);
+            return ResponseEntity.ok(ApiResponse.success("Canchas obtenidas exitosamente", canchas));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al obtener canchas: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse> createCancha(@RequestBody Cancha cancha) {
+        try {
+            Cancha nuevaCancha = canchaService.create(cancha);
+            return ResponseEntity.ok(ApiResponse.success("Cancha creada exitosamente", nuevaCancha));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al crear cancha: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse> updateCancha(@PathVariable Integer id, @RequestBody Cancha cancha) {
+        try {
+            if (!canchaService.findById(id).isPresent()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Cancha no encontrada"));
+            }
+            cancha.setId(id);
+            Cancha canchaActualizada = canchaService.update(cancha);
+            return ResponseEntity.ok(ApiResponse.success("Cancha actualizada exitosamente", canchaActualizada));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al actualizar cancha: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> deleteCancha(@PathVariable Integer id) {
+        try {
+            if (!canchaService.findById(id).isPresent()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Cancha no encontrada"));
+            }
+            canchaService.delete(id);
+            return ResponseEntity.ok(ApiResponse.success("Cancha eliminada exitosamente"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al eliminar cancha: " + e.getMessage()));
+        }
+    }
+}
+
+
+ReservaController.java:
+package uis.edu.entorno.proyecto.inicial.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import uis.edu.entorno.proyecto.inicial.model.Reserva;
+import uis.edu.entorno.proyecto.inicial.model.dto.ReservaRequest;
+import uis.edu.entorno.proyecto.inicial.model.dto.ReservaResponse;
+import uis.edu.entorno.proyecto.inicial.model.dto.ApiResponse;
+import uis.edu.entorno.proyecto.inicial.service.IReservaService;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/reservas")
+@CrossOrigin(origins = "*")
+public class ReservaController {
+
+    @Autowired
+    private IReservaService reservaService;
+
+    private ReservaResponse mapToResponse(Reserva r) {
+        return new ReservaResponse(
+                r.getId(),
+                r.getUsuario().getId(),
+                r.getUsuario().getNombre(),
+                r.getCancha().getId(),
+                r.getCancha().getNombre(),
+                r.getFecha(),
+                r.getHoraInicio(),
+                r.getHoraFin(),
+                r.getEstado()
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse> getAllReservas() {
+        try {
+            List<Reserva> reservas = reservaService.findAll();
+            List<ReservaResponse> resp = reservas.stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(ApiResponse.success("Reservas obtenidas exitosamente", resp));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al obtener reservas: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse> getReservaById(@PathVariable Integer id) {
+        try {
+            return reservaService.findById(id)
+                    .map(r -> ResponseEntity.ok(ApiResponse.success("Reserva encontrada", mapToResponse(r))))
+                    .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Reserva no encontrada")));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al buscar reserva: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse> createReserva(@RequestBody ReservaRequest reservaRequest) {
+        try {
+            Reserva nueva = reservaService.create(reservaRequest);
+            return ResponseEntity.ok(ApiResponse.success("Reserva creada exitosamente", mapToResponse(nueva)));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al crear reserva: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<ApiResponse> updateEstadoReserva(@PathVariable Integer id, @RequestBody String estado) {
+        try {
+            Reserva actualizada = reservaService.updateEstado(id, estado);
+            return ResponseEntity.ok(ApiResponse.success("Estado actualizado", mapToResponse(actualizada)));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al actualizar estado: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse> updateReserva(@PathVariable Integer id, @RequestBody ReservaRequest reservaRequest) {
+        try {
+            Reserva actualizada = reservaService.update(id, reservaRequest);
+            return ResponseEntity.ok(ApiResponse.success("Reserva actualizada exitosamente", mapToResponse(actualizada)));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al actualizar reserva: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> deleteReserva(@PathVariable Integer id) {
+        try {
+            if (!reservaService.findById(id).isPresent()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Reserva no encontrada"));
+            }
+            reservaService.delete(id);
+            return ResponseEntity.ok(ApiResponse.success("Reserva eliminada exitosamente"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al eliminar reserva: " + e.getMessage()));
+        }
+    }
+}
+
+
+UsuarioController.java:
+package uis.edu.entorno.proyecto.inicial.controller;
+
+import uis.edu.entorno.proyecto.inicial.model.Usuario;
+import uis.edu.entorno.proyecto.inicial.model.dto.ApiResponse;
+import uis.edu.entorno.proyecto.inicial.service.IUsuarioService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/usuarios")
+@CrossOrigin(origins = "*")
+public class UsuarioController {
+
+    @Autowired
+    private IUsuarioService usuarioService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse> getAllUsuarios() {
+        try {
+            List<Usuario> usuarios = usuarioService.findAll();
+            return ResponseEntity.ok(ApiResponse.success("Usuarios obtenidos exitosamente", usuarios));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al obtener usuarios: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse> getUsuarioById(@PathVariable Integer id) {
+        try {
+            Optional<Usuario> usuario = usuarioService.findById(id);
+            if (usuario.isPresent()) {
+                return ResponseEntity.ok(ApiResponse.success("Usuario encontrado", usuario.get()));
+            } else {
+                return ResponseEntity.ok(ApiResponse.error("Usuario no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al buscar usuario: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/cedula/{cedula}")
+    public ResponseEntity<ApiResponse> getUsuarioByCedula(@PathVariable String cedula) {
+        try {
+            Optional<Usuario> usuario = usuarioService.findByCedula(cedula);
+            if (usuario.isPresent()) {
+                return ResponseEntity.ok(ApiResponse.success("Usuario encontrado", usuario.get()));
+            } else {
+                return ResponseEntity.ok(ApiResponse.error("Usuario no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al buscar usuario: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse> createUsuario(@RequestBody Usuario usuario) {
+        try {
+            if (usuarioService.existsByCedula(usuario.getCedula())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Ya existe un usuario con esta cédula"));
+            }
+            if (usuarioService.existsByEmail(usuario.getEmail())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Ya existe un usuario con este email"));
+            }
+
+            Usuario nuevoUsuario = usuarioService.create(usuario);
+            return ResponseEntity.ok(ApiResponse.success("Usuario creado exitosamente", nuevoUsuario));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al crear usuario: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse> updateUsuario(@PathVariable Integer id, @RequestBody Usuario usuario) {
+        try {
+            if (!usuarioService.findById(id).isPresent()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Usuario no encontrado"));
+            }
+            usuario.setId(id);
+            Usuario usuarioActualizado = usuarioService.update(usuario);
+            return ResponseEntity.ok(ApiResponse.success("Usuario actualizado exitosamente", usuarioActualizado));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al actualizar usuario: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> deleteUsuario(@PathVariable Integer id) {
+        try {
+            if (!usuarioService.findById(id).isPresent()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Usuario no encontrado"));
+            }
+            usuarioService.delete(id);
+            return ResponseEntity.ok(ApiResponse.success("Usuario eliminado exitosamente"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Error al eliminar usuario: " + e.getMessage()));
+        }
+    }
+}
+
+
+ResourceNotFoundException.java:
+package uis.edu.entorno.proyecto.inicial.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+
+ApiResponse:
+package uis.edu.entorno.proyecto.inicial.model.dto;
+
+public class ApiResponse {
+    private boolean success;
+    private String message;
+    private Object data;
+
+    // Constructores
+    public ApiResponse() {}
+
+    public ApiResponse(boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
+
+    public ApiResponse(boolean success, String message, Object data) {
+        this.success = success;
+        this.message = message;
+        this.data = data;
+    }
+
+    // Getters y Setters
+    public boolean isSuccess() { return success; }
+    public void setSuccess(boolean success) { this.success = success; }
+
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+
+    public Object getData() { return data; }
+    public void setData(Object data) { this.data = data; }
+
+    // Métodos estáticos para respuestas comunes
+    public static ApiResponse success(String message, Object data) {
+        return new ApiResponse(true, message, data);
+    }
+
+    public static ApiResponse success(String message) {
+        return new ApiResponse(true, message);
+    }
+
+    public static ApiResponse error(String message) {
+        return new ApiResponse(false, message);
+    }
+}
+
+
+ReservaRequest:
+package uis.edu.entorno.proyecto.inicial.model.dto;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+public class ReservaRequest {
+    private Integer usuarioId;
+    private Integer canchaId;
+    private LocalDate fecha;
+    private LocalTime horaInicio;
+    private LocalTime horaFin;
+    private String estado;
+
+    public ReservaRequest() {}
+
+    public ReservaRequest(Integer usuarioId, Integer canchaId, LocalDate fecha,
+                          LocalTime horaInicio, LocalTime horaFin, String estado) {
+        this.usuarioId = usuarioId;
+        this.canchaId = canchaId;
+        this.fecha = fecha;
+        this.horaInicio = horaInicio;
+        this.horaFin = horaFin;
+        this.estado = estado;
+    }
+
+    // Getters y Setters
+    public Integer getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Integer usuarioId) { this.usuarioId = usuarioId; }
+
+    public Integer getCanchaId() { return canchaId; }
+    public void setCanchaId(Integer canchaId) { this.canchaId = canchaId; }
+
+    public LocalDate getFecha() { return fecha; }
+    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+
+    public LocalTime getHoraInicio() { return horaInicio; }
+    public void setHoraInicio(LocalTime horaInicio) { this.horaInicio = horaInicio; }
+
+    public LocalTime getHoraFin() { return horaFin; }
+    public void setHoraFin(LocalTime horaFin) { this.horaFin = horaFin; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+}
+
+
+ReservaResponse:
+package uis.edu.entorno.proyecto.inicial.model.dto;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+public class ReservaResponse {
+    private Integer id;
+    private Integer usuarioId;
+    private String nombreUsuario;
+    private Integer canchaId;
+    private String nombreCancha;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate fecha;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    private LocalTime horaInicio;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    private LocalTime horaFin;
+
+    private String estado;
+
+    public ReservaResponse() {}
+
+    public ReservaResponse(Integer id, Integer usuarioId, String nombreUsuario,
+                           Integer canchaId, String nombreCancha,
+                           LocalDate fecha, LocalTime horaInicio, LocalTime horaFin, String estado) {
+        this.id = id;
+        this.usuarioId = usuarioId;
+        this.nombreUsuario = nombreUsuario;
+        this.canchaId = canchaId;
+        this.nombreCancha = nombreCancha;
+        this.fecha = fecha;
+        this.horaInicio = horaInicio;
+        this.horaFin = horaFin;
+        this.estado = estado;
+    }
+
+    // Getters y setters...
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public Integer getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Integer usuarioId) { this.usuarioId = usuarioId; }
+
+    public String getNombreUsuario() { return nombreUsuario; }
+    public void setNombreUsuario(String nombreUsuario) { this.nombreUsuario = nombreUsuario; }
+
+    public Integer getCanchaId() { return canchaId; }
+    public void setCanchaId(Integer canchaId) { this.canchaId = canchaId; }
+
+    public String getNombreCancha() { return nombreCancha; }
+    public void setNombreCancha(String nombreCancha) { this.nombreCancha = nombreCancha; }
+
+    public LocalDate getFecha() { return fecha; }
+    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+
+    public LocalTime getHoraInicio() { return horaInicio; }
+    public void setHoraInicio(LocalTime horaInicio) { this.horaInicio = horaInicio; }
+
+    public LocalTime getHoraFin() { return horaFin; }
+    public void setHoraFin(LocalTime horaFin) { this.horaFin = horaFin; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+}
+
+Cancha:
+package uis.edu.entorno.proyecto.inicial.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "canchas")
+public class Cancha {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "nombre", nullable = false, length = 100)
+    private String nombre;
+
+    @Column(name = "deporte", nullable = false, length = 50)
+    private String deporte;
+
+    @Column(name = "ubicacion", nullable = false, length = 150)
+    private String ubicacion;
+
+    @Column(name = "precio_hora", nullable = false)
+    private Double precioHora;
+
+    @Column(name = "estado", length = 20)
+    private String estado;
+
+    @Column(name = "creado_en")
+    private LocalDateTime creadoEn;
+
+    // Constructores
+    public Cancha() {
+        this.creadoEn = LocalDateTime.now();
+        this.estado = "ACTIVA";
+    }
+
+    public Cancha(String nombre, String deporte, String ubicacion, Double precioHora) {
+        this();
+        this.nombre = nombre;
+        this.deporte = deporte;
+        this.ubicacion = ubicacion;
+        this.precioHora = precioHora;
+    }
+
+    // Getters y Setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public String getDeporte() { return deporte; }
+    public void setDeporte(String deporte) { this.deporte = deporte; }
+
+    public String getUbicacion() { return ubicacion; }
+    public void setUbicacion(String ubicacion) { this.ubicacion = ubicacion; }
+
+    public Double getPrecioHora() { return precioHora; }
+    public void setPrecioHora(Double precioHora) { this.precioHora = precioHora; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+
+    public LocalDateTime getCreadoEn() { return creadoEn; }
+    public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
+}
+
+
+Reserva:
+package uis.edu.entorno.proyecto.inicial.model;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "reservas")
+public class Reserva {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
+    @ManyToOne
+    @JoinColumn(name = "cancha_id", nullable = false)
+    private Cancha cancha;
+
+    @Column(name = "fecha", nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate fecha;
+
+    @Column(name = "hora_inicio", nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    private LocalTime horaInicio;
+
+    @Column(name = "hora_fin", nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    private LocalTime horaFin;
+
+    @Column(name = "estado", length = 20)
+    private String estado;
+
+    @Column(name = "creado_en")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime creadoEn;
+
+    public Reserva() {
+        this.creadoEn = LocalDateTime.now();
+        this.estado = "ACTIVA";
+    }
+
+    public Reserva(Usuario usuario, Cancha cancha, LocalDate fecha,
+                   LocalTime horaInicio, LocalTime horaFin) {
+        this();
+        this.usuario = usuario;
+        this.cancha = cancha;
+        this.fecha = fecha;
+        this.horaInicio = horaInicio;
+        this.horaFin = horaFin;
+    }
+
+    // Getters y setters...
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+
+    public Cancha getCancha() { return cancha; }
+    public void setCancha(Cancha cancha) { this.cancha = cancha; }
+
+    public java.time.LocalDate getFecha() { return fecha; }
+    public void setFecha(java.time.LocalDate fecha) { this.fecha = fecha; }
+
+    public java.time.LocalTime getHoraInicio() { return horaInicio; }
+    public void setHoraInicio(java.time.LocalTime horaInicio) { this.horaInicio = horaInicio; }
+
+    public java.time.LocalTime getHoraFin() { return horaFin; }
+    public void setHoraFin(java.time.LocalTime horaFin) { this.horaFin = horaFin; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+
+    public java.time.LocalDateTime getCreadoEn() { return creadoEn; }
+    public void setCreadoEn(java.time.LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
+}
+
+
+Usuario:
+
+package uis.edu.entorno.proyecto.inicial.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "usuarios")
+public class Usuario {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "cedula", unique = true, nullable = false, length = 20)
+    private String cedula;
+
+    @Column(name = "nombre", nullable = false, length = 100)
+    private String nombre;
+
+    @Column(name = "email", unique = true, nullable = false, length = 100)
+    private String email;
+
+    @Column(name = "usuario", unique = true, nullable = false, length = 50)
+    private String usuario;
+
+    @Column(name = "contraseña", nullable = false, length = 255)
+    private String contraseña;
+
+    @Column(name = "rol", nullable = false, length = 20)
+    private String rol;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    // Constructores
+    public Usuario() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Usuario(String cedula, String nombre, String email, String usuario,
+                   String contraseña, String rol) {
+        this();
+        this.cedula = cedula;
+        this.nombre = nombre;
+        this.email = email;
+        this.usuario = usuario;
+        this.contraseña = contraseña;
+        this.rol = rol;
+    }
+
+    // Getters y Setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getCedula() { return cedula; }
+    public void setCedula(String cedula) { this.cedula = cedula; }
+
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getUsuario() { return usuario; }
+    public void setUsuario(String usuario) { this.usuario = usuario; }
+
+    public String getContraseña() { return contraseña; }
+    public void setContraseña(String contraseña) { this.contraseña = contraseña; }
+
+    public String getRol() { return rol; }
+    public void setRol(String rol) { this.rol = rol; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+}
+
+
+CanchaRepository:
+package uis.edu.entorno.proyecto.inicial.repository;
+
+import uis.edu.entorno.proyecto.inicial.model.Cancha;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface CanchaRepository extends JpaRepository<Cancha, Integer> {
+    List<Cancha> findByDeporte(String deporte);
+    List<Cancha> findByEstado(String estado);
+    List<Cancha> findByUbicacionContainingIgnoreCase(String ubicacion);
+}
+
+
+ReservaRepository:
+
+package uis.edu.entorno.proyecto.inicial.repository;
+
+import uis.edu.entorno.proyecto.inicial.model.Reserva;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+@Repository
+public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
+    List<Reserva> findByUsuarioId(Integer usuarioId);
+    List<Reserva> findByCanchaId(Integer canchaId);
+    List<Reserva> findByFecha(LocalDate fecha);
+    List<Reserva> findByEstado(String estado);
+    List<Reserva> findByCanchaIdAndFecha(Integer canchaId, LocalDate fecha);
+    boolean existsByCanchaIdAndFechaAndHoraInicioLessThanAndHoraFinGreaterThan(
+            Integer canchaId, LocalDate fecha, LocalTime horaFin, LocalTime horaInicio);
+}
+
+
+UsuarioRepository:
+package uis.edu.entorno.proyecto.inicial.repository;
+
+import uis.edu.entorno.proyecto.inicial.model.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.Optional;
+
+@Repository
+public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
+    Optional<Usuario> findByCedula(String cedula);
+    Optional<Usuario> findByEmail(String email);
+    Optional<Usuario> findByUsuario(String usuario);
+    boolean existsByCedula(String cedula);
+    boolean existsByEmail(String email);
+    boolean existsByUsuario(String usuario);
+}
+
+
+CanchaServiceImpl:
+package uis.edu.entorno.proyecto.inicial.service.impl;
+
+import uis.edu.entorno.proyecto.inicial.model.Cancha;
+import uis.edu.entorno.proyecto.inicial.repository.CanchaRepository;
+import uis.edu.entorno.proyecto.inicial.service.ICanchaService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class CanchaServiceImpl implements ICanchaService {
+
+    @Autowired
+    private CanchaRepository canchaRepository;
+
+    @Override
+    public List<Cancha> findAll() {
+        return canchaRepository.findAll();
+    }
+
+    @Override
+    public Optional<Cancha> findById(Integer id) {
+        return canchaRepository.findById(id);
+    }
+
+    @Override
+    public List<Cancha> findByDeporte(String deporte) {
+        return canchaRepository.findByDeporte(deporte);
+    }
+
+    @Override
+    public List<Cancha> findByEstado(String estado) {
+        return canchaRepository.findByEstado(estado);
+    }
+
+    @Override
+    public Cancha create(Cancha cancha) {
+        return canchaRepository.save(cancha);
+    }
+
+    @Override
+    public Cancha update(Cancha cancha) {
+        return canchaRepository.save(cancha);
+    }
+
+    @Override
+    public void delete(Integer id) {
+        canchaRepository.deleteById(id);
+    }
+}
+
+
+ReservaServiceImpl:
+package uis.edu.entorno.proyecto.inicial.service.impl;
+
+import uis.edu.entorno.proyecto.inicial.model.Reserva;
+import uis.edu.entorno.proyecto.inicial.model.Usuario;
+import uis.edu.entorno.proyecto.inicial.model.Cancha;
+import uis.edu.entorno.proyecto.inicial.model.dto.ReservaRequest;
+import uis.edu.entorno.proyecto.inicial.repository.ReservaRepository;
+import uis.edu.entorno.proyecto.inicial.repository.UsuarioRepository;
+import uis.edu.entorno.proyecto.inicial.repository.CanchaRepository;
+import uis.edu.entorno.proyecto.inicial.service.IReservaService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class ReservaServiceImpl implements IReservaService {
+
+    @Autowired
+    private ReservaRepository reservaRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private CanchaRepository canchaRepository;
+
+    @Override
+    public List<Reserva> findAll() {
+        return reservaRepository.findAll();
+    }
+
+    @Override
+    public Optional<Reserva> findById(Integer id) {
+        return reservaRepository.findById(id);
+    }
+
+    @Override
+    public List<Reserva> findByUsuarioId(Integer usuarioId) {
+        return reservaRepository.findByUsuarioId(usuarioId);
+    }
+
+    @Override
+    public List<Reserva> findByCanchaId(Integer canchaId) {
+        return reservaRepository.findByCanchaId(canchaId);
+    }
+
+    @Override
+    public Reserva create(ReservaRequest reservaRequest) {
+        Usuario usuario = usuarioRepository.findById(reservaRequest.getUsuarioId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Cancha cancha = canchaRepository.findById(reservaRequest.getCanchaId())
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
+
+        Reserva reserva = new Reserva();
+        reserva.setUsuario(usuario);
+        reserva.setCancha(cancha);
+        reserva.setFecha(reservaRequest.getFecha());
+        reserva.setHoraInicio(reservaRequest.getHoraInicio());
+        reserva.setHoraFin(reservaRequest.getHoraFin());
+        reserva.setEstado(reservaRequest.getEstado() != null ? reservaRequest.getEstado() : "ACTIVA");
+
+        return reservaRepository.save(reserva);
+    }
+
+    @Override
+    public Reserva update(Integer id, ReservaRequest reservaRequest) {
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        reserva.setUsuario(usuarioRepository.findById(reservaRequest.getUsuarioId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
+        reserva.setCancha(canchaRepository.findById(reservaRequest.getCanchaId())
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada")));
+
+        reserva.setFecha(reservaRequest.getFecha());
+        reserva.setHoraInicio(reservaRequest.getHoraInicio());
+        reserva.setHoraFin(reservaRequest.getHoraFin());
+        reserva.setEstado(reservaRequest.getEstado());
+
+        return reservaRepository.save(reserva);
+    }
+
+    @Override
+    public Reserva updateEstado(Integer id, String estado) {
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+        reserva.setEstado(estado);
+        return reservaRepository.save(reserva);
+    }
+
+    @Override
+    public void delete(Integer id) {
+        reservaRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean isCanchaDisponible(Integer canchaId, String fecha, String horaInicio, String horaFin) {
+        // Mantener implementación simple por ahora
+        return true;
+    }
+
+    @Override
+    public void actualizarEstadosAutomaticamente() {
+        // método vacío (si quieres procesar en backend periódicamente)
+    }
+}
+
+
+UsuarioServiceImpl:
+package uis.edu.entorno.proyecto.inicial.service.impl;
+
+import uis.edu.entorno.proyecto.inicial.model.Usuario;
+import uis.edu.entorno.proyecto.inicial.repository.UsuarioRepository;
+import uis.edu.entorno.proyecto.inicial.service.IUsuarioService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class UsuarioServiceImpl implements IUsuarioService {
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Override
+    public List<Usuario> findAll() {
+        return usuarioRepository.findAll();
+    }
+
+    @Override
+    public Optional<Usuario> findById(Integer id) {
+        return usuarioRepository.findById(id);
+    }
+
+    @Override
+    public Optional<Usuario> findByCedula(String cedula) {
+        return usuarioRepository.findByCedula(cedula);
+    }
+
+    @Override
+    public Optional<Usuario> findByEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
+    @Override
+    public Usuario create(Usuario usuario) {
+        return usuarioRepository.save(usuario);
+    }
+
+    @Override
+    public Usuario update(Usuario usuario) {
+        return usuarioRepository.save(usuario);
+    }
+
+    @Override
+    public void delete(Integer id) {
+        usuarioRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsByCedula(String cedula) {
+        return usuarioRepository.existsByCedula(cedula);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return usuarioRepository.existsByEmail(email);
+    }
+}
+
+
+ICanchaService:
+package uis.edu.entorno.proyecto.inicial.service;
+
+import uis.edu.entorno.proyecto.inicial.model.Cancha;
+import java.util.List;
+import java.util.Optional;
+
+public interface ICanchaService {
+    List<Cancha> findAll();
+    Optional<Cancha> findById(Integer id);
+    List<Cancha> findByDeporte(String deporte);
+    List<Cancha> findByEstado(String estado);
+    Cancha create(Cancha cancha);
+    Cancha update(Cancha cancha);
+    void delete(Integer id);
+}
+
+
+IReservaService:
+package uis.edu.entorno.proyecto.inicial.service;
+
+import uis.edu.entorno.proyecto.inicial.model.Reserva;
+import uis.edu.entorno.proyecto.inicial.model.dto.ReservaRequest;
+import java.util.List;
+import java.util.Optional;
+
+public interface IReservaService {
+    List<Reserva> findAll();
+    Optional<Reserva> findById(Integer id);
+    List<Reserva> findByUsuarioId(Integer usuarioId);
+    List<Reserva> findByCanchaId(Integer canchaId);
+    Reserva create(ReservaRequest reservaRequest);
+    Reserva updateEstado(Integer id, String estado);
+    void delete(Integer id);
+    boolean isCanchaDisponible(Integer canchaId, String fecha, String horaInicio, String horaFin);
+
+    Reserva update(Integer id, ReservaRequest reservaRequest);
+
+    void actualizarEstadosAutomaticamente();
+}
+
+
+IUsuarioService:
+package uis.edu.entorno.proyecto.inicial.service;
+
+import uis.edu.entorno.proyecto.inicial.model.Usuario;
+import java.util.List;
+import java.util.Optional;
+
+public interface IUsuarioService {
+    List<Usuario> findAll();
+    Optional<Usuario> findById(Integer id);
+    Optional<Usuario> findByCedula(String cedula);
+    Optional<Usuario> findByEmail(String email);
+    Usuario create(Usuario usuario);
+    Usuario update(Usuario usuario);
+    void delete(Integer id);
+    boolean existsByCedula(String cedula);
+    boolean existsByEmail(String email);
+}
+
+
+ProyectoInicialApplication:
+
+package uis.edu.entorno.proyecto.inicial;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ProyectoInicialApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ProyectoInicialApplication.class, args);
+	}
+}
+
+
+styles.css:
+/* Importa Bootstrap */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css");
+
+/* Paleta de colores mejorada */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --info-color: #1abc9c;
+    --light-color: #ecf0f1;
+    --dark-color: #2c3e50;
+    --text-dark: #2c3e50;
+    --text-light: #ffffff;
+    --bg-light: #f8f9fa;
+    --card-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* Estilos generales */
+body {
+    background-color: var(--bg-light);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+.login-body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+/* Títulos con mejor contraste */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.card-title {
+    color: var(--text-dark) !important;
+    font-weight: 600;
+}
+
+.container {
+    max-width: 1300px;
+}
+
+/* ===== CONTENEDOR DE LA PÁGINA DE BIENVENIDA ===== */
+.container.mt-5 {
+    max-width: 95%;       /* ocupa casi toda la pantalla */
+    margin-top: 2rem !important;  /* reduce el margen superior */
+    margin-bottom: 2rem;  /* agrega algo de espacio inferior */
+}
+
+@media (min-width: 1200px) {
+    .container.mt-5 {
+        max-width: 90%;   /* en pantallas grandes ocupa el 90% */
+    }
+}
+
+@media (max-width: 768px) {
+    .container.mt-5 {
+        max-width: 100%;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+.card {
+    border-radius: 12px;
+    padding: 0;
+    margin-top: 20px;
+    box-shadow: var(--card-shadow);
+    border: none;
+    overflow: hidden;
+}
+
+/* Cabeceras de tarjetas con mejor contraste */
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    font-weight: 600;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.card-header.bg-primary {
+    background: linear-gradient(135deg, var(--primary-color), #34495e) !important;
+    color: var(--text-light) !important;
+}
+
+.card-header.bg-success {
+    background: linear-gradient(135deg, var(--success-color), #2ecc71) !important;
+    color: var(--text-light) !important;
+}
+
+.card-header.bg-warning {
+    background: linear-gradient(135deg, var(--warning-color), #f1c40f) !important;
+    color: var(--text-dark) !important;
+}
+
+.card-header.bg-info {
+    background: linear-gradient(135deg, var(--info-color), #16a085) !important;
+    color: var(--text-light) !important;
+}
+
+.card-header.bg-danger {
+    background: linear-gradient(135deg, var(--danger-color), #c0392b) !important;
+    color: var(--text-light) !important;
+}
+
+.card-body {
+    padding: 1.5rem;
+    background-color: white;
+}
+
+/* ===== TABLAS - PRIORIDAD A BOTONES DE ACCIONES ===== */
+
+/* Estructura base de tablas */
+.table {
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    table-layout: fixed;
+    width: 100%;
+}
+
+/* Cabeceras de tabla */
+.table th {
+    background: linear-gradient(135deg, var(--primary-color), #34495e);
+    color: var(--text-light);
+    font-weight: 600;
+    padding: 1rem 0.5rem;
+    border: none;
+    text-align: center;
+    vertical-align: middle;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Celdas de tabla */
+.table td {
+    padding: 0.875rem 0.5rem;
+    border-color: #f1f2f6;
+    vertical-align: middle;
+    text-align: center;
+}
+
+/* ===== DISTRIBUCIÓN OPTIMIZADA DE COLUMNAS ===== */
+
+/* TABLA USUARIOS - Prioridad a acciones, emails truncados */
+#tablaUsuarios th:nth-child(1), /* ID */
+#tablaUsuarios td:nth-child(1) {
+    width: 6%;
+    min-width: 50px;
+}
+
+#tablaUsuarios th:nth-child(2), /* Cédula */
+#tablaUsuarios td:nth-child(2) {
+    width: 10%;
+    min-width: 90px;
+}
+
+#tablaUsuarios th:nth-child(3), /* Nombre */
+#tablaUsuarios td:nth-child(3) {
+    width: 14%;
+    min-width: 110px;
+}
+
+#tablaUsuarios th:nth-child(4), /* Email - REDUCIDO y truncado */
+#tablaUsuarios td:nth-child(4) {
+    width: 20%;
+    min-width: 150px;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#tablaUsuarios th:nth-child(5), /* Usuario */
+#tablaUsuarios td:nth-child(5) {
+    width: 10%;
+    min-width: 80px;
+}
+
+#tablaUsuarios th:nth-child(6), /* Rol */
+#tablaUsuarios td:nth-child(6) {
+    width: 10%;
+    min-width: 80px;
+}
+
+#tablaUsuarios th:nth-child(7), /* Acciones - MÁS ESPACIO */
+#tablaUsuarios td:nth-child(7) {
+    width: 20%;
+    min-width: 160px;
+    max-width: 200px;
+}
+
+/* TABLA CANCHAS */
+#tablaCanchas th:nth-child(1), /* ID */
+#tablaCanchas td:nth-child(1) {
+    width: 6%;
+    min-width: 50px;
+}
+
+#tablaCanchas th:nth-child(2), /* Nombre */
+#tablaCanchas td:nth-child(2) {
+    width: 15%;
+    min-width: 100px;
+}
+
+#tablaCanchas th:nth-child(3), /* Deporte */
+#tablaCanchas td:nth-child(3) {
+    width: 12%;
+    min-width: 90px;
+}
+
+#tablaCanchas th:nth-child(4), /* Ubicación - REDUCIDO y truncado */
+#tablaCanchas td:nth-child(4) {
+    width: 25%;
+    min-width: 150px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#tablaCanchas th:nth-child(5), /* Precio */
+#tablaCanchas td:nth-child(5) {
+    width: 12%;
+    min-width: 90px;
+}
+
+#tablaCanchas th:nth-child(6), /* Estado */
+#tablaCanchas td:nth-child(6) {
+    width: 10%;
+    min-width: 80px;
+}
+
+#tablaCanchas th:nth-child(7), /* Acciones - MÁS ESPACIO */
+#tablaCanchas td:nth-child(7) {
+    width: 20%;
+    min-width: 160px;
+    max-width: 200px;
+}
+
+/* TABLA RESERVAS */
+#tablaReservas th:nth-child(1), /* ID */
+#tablaReservas td:nth-child(1) {
+    width: 5%;
+    min-width: 40px;
+}
+
+#tablaReservas th:nth-child(2), /* Usuario */
+#tablaReservas td:nth-child(2) {
+    width: 12%;
+    min-width: 90px;
+}
+
+#tablaReservas th:nth-child(3), /* Cancha */
+#tablaReservas td:nth-child(3) {
+    width: 15%;
+    min-width: 110px;
+}
+
+#tablaReservas th:nth-child(4), /* Fecha */
+#tablaReservas td:nth-child(4) {
+    width: 10%;
+    min-width: 85px;
+}
+
+#tablaReservas th:nth-child(5), /* Hora Inicio */
+#tablaReservas td:nth-child(5) {
+    width: 8%;
+    min-width: 70px;
+}
+
+#tablaReservas th:nth-child(6), /* Hora Fin */
+#tablaReservas td:nth-child(6) {
+    width: 8%;
+    min-width: 70px;
+}
+
+#tablaReservas th:nth-child(7), /* Estado */
+#tablaReservas td:nth-child(7) {
+    width: 10%;
+    min-width: 80px;
+}
+
+#tablaReservas th:nth-child(8), /* Acciones - MÁS ESPACIO */
+#tablaReservas td:nth-child(8) {
+    width: 22%;
+    min-width: 170px;
+    max-width: 220px;
+}
+
+/* ===== BOTONES DE ACCIONES - GARANTIZAR VISIBILIDAD COMPLETA ===== */
+
+/* Contenedor de botones - asegurar que no se rompa */
+.btn-group-table {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+    min-width: 150px;
+    margin: 0 auto;
+}
+
+/* Botones compactos pero legibles */
+.btn-table {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    min-width: 65px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Botones en tablas */
+.table .btn {
+    margin: 0;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    border-radius: 6px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-width: 65px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+/* Texto "Solo lectura" */
+.table .text-muted {
+    font-size: 0.8rem;
+    color: #6c757d !important;
+    font-style: italic;
+    white-space: nowrap;
+}
+
+/* ===== ESTILOS COMPLEMENTARIOS ===== */
+
+/* Hover states */
+.table-hover tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.08);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover .btn {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.8em;
+    font-weight: 600;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.badge.bg-primary {
+    background: linear-gradient(135deg, var(--secondary-color), #2980b9) !important;
+    color: white;
+}
+
+.badge.bg-success {
+    background: linear-gradient(135deg, var(--success-color), #2ecc71) !important;
+    color: white;
+}
+
+.badge.bg-warning {
+    background: linear-gradient(135deg, var(--warning-color), #f1c40f) !important;
+    color: var(--text-dark);
+}
+
+.badge.bg-info {
+    background: linear-gradient(135deg, var(--info-color), #16a085) !important;
+    color: white;
+}
+
+.badge.bg-danger {
+    background: linear-gradient(135deg, var(--danger-color), #c0392b) !important;
+    color: white;
+}
+
+/* Botones generales */
+button, .btn {
+    border-radius: 8px !important;
+    font-weight: 500;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success-color), #2ecc71);
+    color: white;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning-color), #f1c40f);
+    color: var(--text-dark);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-color), #c0392b);
+    color: white;
+}
+
+/* Formularios */
+.form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255,255,255,0.9);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin: 0 0.125rem;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: white;
+    background-color: rgba(255,255,255,0.1);
+    transform: translateY(-1px);
+}
+
+.user-info {
+    color: white !important;
+    margin-right: 15px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+}
+
+.btn-outline-light {
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-light:hover {
+    background-color: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-2px);
+}
+
+/* Página de bienvenida */
+.welcome-container {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: var(--card-shadow);
+    margin: 2rem 0;
+}
+
+.welcome-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border-left: 4px solid var(--secondary-color);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.feature-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: #5a6c7d;
+    line-height: 1.6;
+}
+
+/* Login mejorado */
+.login-body .card {
+    border: none;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.login-body .card-content {
+    padding: 2.5rem;
+}
+
+.login-body .card-title {
+    color: var(--primary-color) !important;
+    font-size: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.login-body .input-field {
+    margin-bottom: 1.5rem;
+}
+
+.login-body .input-field label {
+    color: #5a6c7d;
+    font-weight: 500;
+}
+
+.login-body .input-field .prefix {
+    color: var(--secondary-color);
+}
+
+/* ===== RESPONSIVE - PRIORIDAD A ACCIONES ===== */
+
+@media (max-width: 1200px) {
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+
+    /* Reducir aún más columnas de texto largo */
+    #tablaUsuarios td:nth-child(4) { /* Email */
+        max-width: 150px;
+    }
+
+    #tablaCanchas td:nth-child(4) { /* Ubicación */
+        max-width: 180px;
+    }
+
+    .btn-table {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.75rem;
+        min-width: 60px;
+    }
+}
+
+@media (max-width: 992px) {
+    .container {
+        padding: 10px;
+    }
+
+    /* Ocultar columnas menos importantes para dar más espacio a acciones */
+    #tablaUsuarios th:nth-child(5), /* Usuario */
+    #tablaUsuarios td:nth-child(5) {
+        display: none;
+    }
+
+    #tablaCanchas th:nth-child(5), /* Precio */
+    #tablaCanchas td:nth-child(5) {
+        display: none;
+    }
+
+    #tablaReservas th:nth-child(6), /* Hora Fin */
+    #tablaReservas td:nth-child(6) {
+        display: none;
+    }
+
+    /* Ajustar anchos restantes */
+    #tablaUsuarios th:nth-child(4),
+    #tablaUsuarios td:nth-child(4) {
+        width: 25%;
+    }
+
+    #tablaUsuarios th:nth-child(7),
+    #tablaUsuarios td:nth-child(7) {
+        width: 25%;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem 0.3rem;
+    }
+
+    /* Ocultar más columnas en móviles */
+    #tablaUsuarios th:nth-child(2), /* Cédula */
+    #tablaUsuarios td:nth-child(2) {
+        display: none;
+    }
+
+    #tablaCanchas th:nth-child(3), /* Deporte */
+    #tablaCanchas td:nth-child(3) {
+        display: none;
+    }
+
+    #tablaReservas th:nth-child(5), /* Hora Inicio */
+    #tablaReservas td:nth-child(5) {
+        display: none;
+    }
+
+    /* Botones más compactos pero aún legibles */
+    .btn-table {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+        min-width: 55px;
+        height: 28px;
+    }
+
+    .btn-group-table {
+        gap: 0.25rem;
+        min-width: 130px;
+    }
+
+    .navbar-collapse {
+        margin-top: 10px;
+    }
+
+    .user-info {
+        margin-right: 0;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .welcome-container {
+        padding: 2rem 1rem;
+        margin: 1rem 0;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+        margin: 0.5rem 0;
+    }
+}
+
+@media (max-width: 576px) {
+    /* En móviles muy pequeños, priorizar completamente las acciones */
+    #tablaUsuarios th:nth-child(4), /* Email */
+    #tablaUsuarios td:nth-child(4) {
+        display: none;
+    }
+
+    #tablaCanchas th:nth-child(4), /* Ubicación */
+    #tablaCanchas td:nth-child(4) {
+        display: none;
+    }
+
+    #tablaReservas th:nth-child(3), /* Cancha */
+    #tablaReservas td:nth-child(3) {
+        display: none;
+    }
+
+    /* Dar máximo espacio a acciones */
+    #tablaUsuarios th:nth-child(7),
+    #tablaUsuarios td:nth-child(7) {
+        width: 35%;
+        min-width: 140px;
+    }
+
+    #tablaCanchas th:nth-child(7),
+    #tablaCanchas td:nth-child(7) {
+        width: 35%;
+        min-width: 140px;
+    }
+
+    #tablaReservas th:nth-child(8),
+    #tablaReservas td:nth-child(8) {
+        width: 40%;
+        min-width: 150px;
+    }
+}
+
+/* Animaciones */
+.fade-in {
+    animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estados de carga */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Mejoras para el iframe del menú */
+iframe {
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Asegurar que las cabeceras de acciones estén siempre visibles */
+#actionsHeader {
+    display: table-cell !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Filas alternas para mejor legibilidad */
+.table tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table tbody tr:nth-child(even):hover {
+    background-color: rgba(52, 152, 219, 0.08);
+}
+
+
+canchas.js:
+// Verificar si estamos en una página que necesita este script
+if (document.getElementById('tablaCanchas') || window.location.pathname.includes('form_canchas.html')) {
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!SessionHelper.isLoggedIn()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        if (document.getElementById('tablaCanchas')) {
+            const isAdmin = SessionHelper.isAdmin();
+
+            const adminActions = document.getElementById('adminActions');
+            const actionsHeader = document.getElementById('actionsHeader');
+            if (!isAdmin) {
+                if (adminActions) adminActions.style.display = 'none';
+                if (actionsHeader) actionsHeader.style.display = 'none';
+            } else {
+                if (adminActions) adminActions.style.display = 'block';
+                if (actionsHeader) actionsHeader.style.display = 'table-cell';
+            }
+
+            cargarCanchas();
+        }
+
+        const canchaForm = document.getElementById('canchaForm');
+        if (canchaForm) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const canchaId = urlParams.get('id');
+
+            if (canchaId) {
+                const formTitle = document.getElementById('formTitle');
+                if (formTitle) formTitle.textContent = '🏟️ Editar Cancha';
+                cargarCancha(canchaId);
+            }
+
+            canchaForm.addEventListener('submit', guardarCancha);
+        }
+    });
+}
+
+async function cargarCanchas() {
+    try {
+        const response = await RequestHelper.get('/canchas');
+
+        if (!response || !response.data) {
+            console.error('Respuesta inválida:', response);
+            return;
+        }
+
+        const canchas = response.data;
+        const tbody = document.getElementById('tablaCanchas');
+
+        if (!tbody) {
+            console.error('No se encontró el elemento tablaCanchas');
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        const isAdmin = SessionHelper.isAdmin();
+
+        canchas.forEach(cancha => {
+            const tr = document.createElement('tr');
+
+            let accionesHTML = '';
+            if (isAdmin) {
+                accionesHTML = `
+                    <a href="form_canchas.html?id=${cancha.id}" class="btn btn-sm btn-warning">Editar</a>
+                    <button onclick="eliminarCancha(${cancha.id})" class="btn btn-sm btn-danger">Eliminar</button>
+                `;
+            } else {
+                accionesHTML = '<span class="text-muted">Solo lectura</span>';
+            }
+
+            tr.innerHTML = `
+                <td>${cancha.id}</td>
+                <td>${cancha.nombre}</td>
+                <td><span class="badge bg-primary">${cancha.deporte}</span></td>
+                <td>${cancha.ubicacion}</td>
+                <td>$${cancha.precioHora.toLocaleString()}</td>
+                <td><span class="badge ${cancha.estado === 'ACTIVA' ? 'bg-success' : 'bg-secondary'}">${cancha.estado}</span></td>
+                <td>${accionesHTML}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error al cargar canchas:', error);
+        alert('Error al cargar canchas: ' + error.message);
+    }
+}
+
+async function eliminarCancha(id) {
+    if (confirm('¿Está seguro de eliminar esta cancha?')) {
+        try {
+            await RequestHelper.delete(`/canchas/${id}`);
+            cargarCanchas();
+        } catch (error) {
+            alert('Error al eliminar cancha: ' + error.message);
+        }
+    }
+}
+
+async function cargarCancha(id) {
+    try {
+        const response = await RequestHelper.get(`/canchas/${id}`);
+        const cancha = response.data;
+
+        document.getElementById('canchaId').value = cancha.id;
+        document.getElementById('nombre').value = cancha.nombre;
+        document.getElementById('deporte').value = cancha.deporte;
+        document.getElementById('ubicacion').value = cancha.ubicacion;
+        document.getElementById('precioHora').value = cancha.precioHora;
+        document.getElementById('estado').value = cancha.estado;
+    } catch (error) {
+        alert('Error al cargar cancha: ' + error.message);
+    }
+}
+
+async function guardarCancha(e) {
+    e.preventDefault();
+
+    const canchaData = {
+        nombre: document.getElementById('nombre').value,
+        deporte: document.getElementById('deporte').value,
+        ubicacion: document.getElementById('ubicacion').value,
+        precioHora: parseFloat(document.getElementById('precioHora').value),
+        estado: document.getElementById('estado').value
+    };
+
+    const canchaId = document.getElementById('canchaId').value;
+
+    try {
+        if (canchaId) {
+            canchaData.id = parseInt(canchaId);
+            await RequestHelper.put(`/canchas/${canchaId}`, canchaData);
+            alert('Cancha actualizada correctamente');
+        } else {
+            await RequestHelper.post('/canchas', canchaData);
+            alert('Cancha creada correctamente');
+        }
+
+        window.location.href = 'canchas.html';
+    } catch (error) {
+        alert('Error al guardar cancha: ' + error.message);
+    }
+}
+
+login.js:
+
+// Verificar si estamos en la página de login
+if (document.getElementById('loginForm') || window.location.pathname.includes('index.html')) {
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+
+        // Si el usuario ya está logueado, redirigir al menú
+        if (SessionHelper.isLoggedIn() && !window.location.pathname.includes('index.html')) {
+            window.location.href = 'menu.html';
+            return;
+        }
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const usuario = document.getElementById('icon_user').value;
+                const password = document.getElementById('icon_pass').value;
+
+                if (!usuario || !password) {
+                    alert('Por favor, complete todos los campos');
+                    return;
+                }
+
+                try {
+                    // Buscar usuario por nombre de usuario
+                    const usuarios = await RequestHelper.get('/usuarios');
+                    const user = usuarios.data.find(u => u.usuario === usuario && u.contraseña === password);
+
+                    if (user) {
+                        SessionHelper.setUser(user);
+                        window.location.href = 'menu.html';
+                    } else {
+                        alert('Usuario o contraseña incorrectos');
+                    }
+                } catch (error) {
+                    console.error('Error en login:', error);
+                    alert('Error al iniciar sesión: ' + error.message);
+                }
+            });
+        }
+    });
+}
+
+
+menu.js:
+// Verificar si estamos en la página del menú
+if (window.location.pathname.includes('menu.html') || document.getElementById('userInfo')) {
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar si el usuario está logueado
+        if (!SessionHelper.isLoggedIn()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // Mostrar información del usuario
+        const user = SessionHelper.getUser();
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement && user) {
+            userInfoElement.textContent = `Bienvenido, ${user.nombre} (${user.rol})`;
+        }
+
+        // Configurar el botón de cerrar sesión
+        const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+        if (btnCerrarSesion) {
+            btnCerrarSesion.addEventListener('click', cerrarSesion);
+        }
+    });
+}
+
+// Función global para cerrar sesión
+function cerrarSesion() {
+    if (confirm('¿Está seguro de que desea cerrar sesión?')) {
+        SessionHelper.clearUser();
+        window.location.href = 'index.html';
+    }
+}
+
+// También hacer la función disponible globalmente
+window.cerrarSesion = cerrarSesion;
+
+
+request.js:
+const API_BASE_URL = 'http://localhost:8095/api';
+
+class RequestHelper {
+    static async get(url) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${url}`);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('GET Error:', error);
+            throw error;
+        }
+    }
+
+    static async post(url, data) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${url}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('POST Error:', error);
+            throw error;
+        }
+    }
+
+    static async put(url, data) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${url}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('PUT Error:', error);
+            throw error;
+        }
+    }
+
+    static async delete(url) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${url}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('DELETE Error:', error);
+            throw error;
+        }
+    }
+}
+
+// Helper para manejar sesiones
+class SessionHelper {
+    static setUser(user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+    }
+
+    static getUser() {
+        const user = localStorage.getItem('currentUser');
+        return user ? JSON.parse(user) : null;
+    }
+
+    static clearUser() {
+        localStorage.removeItem('currentUser');
+    }
+
+    static isAdmin() {
+        const user = this.getUser();
+        return user && (user.rol === 'ADMIN' || user.rol === 'OPERATOR');
+    }
+
+    static isLoggedIn() {
+        return this.getUser() !== null;
+    }
+
+    static getUserId() {
+        const user = this.getUser();
+        return user ? user.id : null;
+    }
+}
+
+// Función para verificar autenticación antes de cada petición
+RequestHelper.addAuthCheck = function() {
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+        // Si estamos en la página de login, no aplicar la verificación de autenticación
+        if (window.location.pathname.includes('index.html')) {
+            return originalFetch.apply(this, args);
+        }
+
+        // Para otras páginas, verificar autenticación para peticiones a la API
+        const url = args[0];
+        if (url && url.includes(API_BASE_URL) && !SessionHelper.isLoggedIn()) {
+            console.warn('Usuario no autenticado, redirigiendo al login');
+            window.location.href = 'index.html';
+            return Promise.reject(new Error('Usuario no autenticado'));
+        }
+        return originalFetch.apply(this, args);
+    };
+};
+
+// Ejecutar la verificación de autenticación
+RequestHelper.addAuthCheck();
+
+
+reservas.js:
+// Verificar si estamos en una página que necesita este script
+if (document.getElementById('tablaReservas') || window.location.pathname.includes('form_reservas.html')) {
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!SessionHelper.isLoggedIn()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        if (document.getElementById('tablaReservas')) {
+            const isAdmin = SessionHelper.isAdmin();
+
+            const adminActions = document.getElementById('adminActions');
+            const actionsHeader = document.getElementById('actionsHeader');
+            if (!isAdmin) {
+                if (adminActions) adminActions.style.display = 'none';
+                if (actionsHeader) actionsHeader.style.display = 'none';
+            } else {
+                if (adminActions) adminActions.style.display = 'block';
+                if (actionsHeader) actionsHeader.style.display = 'table-cell';
+            }
+
+            cargarReservas();
+        }
+
+        const reservaForm = document.getElementById('reservaForm');
+        if (reservaForm) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const reservaId = urlParams.get('id');
+
+            if (reservaId) {
+                const formTitle = document.getElementById('formTitle');
+                if (formTitle) formTitle.textContent = '📅 Editar Reserva';
+                cargarReserva(reservaId);
+            }
+
+            reservaForm.addEventListener('submit', guardarReserva);
+        }
+    });
+}
+
+function formatDateDisplay(fechaStr) {
+    // fechaStr expected format: 'yyyy-MM-dd' (from backend)
+    if (!fechaStr) return '';
+    const parts = fechaStr.split('-');
+    if (parts.length !== 3) return fechaStr;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/mm/yyyy
+}
+
+async function cargarReservas() {
+    try {
+        const response = await RequestHelper.get('/reservas');
+
+        if (!response || !response.data) {
+            console.error('Respuesta inválida:', response);
+            return;
+        }
+
+        const reservas = response.data;
+        const tbody = document.getElementById('tablaReservas');
+
+        if (!tbody) {
+            console.error('No se encontró el elemento tablaReservas');
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        const currentUser = SessionHelper.getUser();
+        const isAdmin = SessionHelper.isAdmin();
+
+        // Filtrar reservas si no es admin
+        const reservasFiltradas = isAdmin ? reservas :
+            reservas.filter(r => r.usuarioId === currentUser.id || (r.usuario && r.usuario.id === currentUser.id));
+
+        reservasFiltradas.forEach(reserva => {
+            const tr = document.createElement('tr');
+
+            let accionesHTML = '';
+            if (isAdmin || (reserva.usuarioId && reserva.usuarioId === currentUser.id) || (reserva.usuario && reserva.usuario.id === currentUser.id)) {
+                accionesHTML = `
+                    <a href="form_reservas.html?id=${reserva.id}" class="btn btn-sm btn-warning">Editar</a>
+                    <button onclick="eliminarReserva(${reserva.id})" class="btn btn-sm btn-danger">Eliminar</button>
+                `;
+            } else {
+                accionesHTML = '<span class="text-muted">Solo lectura</span>';
+            }
+
+            // Mostrar fecha sin ajuste horario (usamos backend 'yyyy-MM-dd' directamente)
+            const fechaDisplay = reserva.fecha ? formatDateDisplay(reserva.fecha) : '';
+
+            // Estado: mostrar etiqueta con color según valor
+            let badgeClass = 'bg-secondary';
+            if (reserva.estado === 'ACTIVA') badgeClass = 'bg-success';
+            if (reserva.estado === 'FINALIZADA') badgeClass = 'bg-primary';
+            if (reserva.estado === 'CANCELADA') badgeClass = 'bg-danger';
+
+            tr.innerHTML = `
+                <td>${reserva.id}</td>
+                <td>${reserva.nombreUsuario || (reserva.usuario && reserva.usuario.nombre) || ''}</td>
+                <td>${reserva.nombreCancha || (reserva.cancha && reserva.cancha.nombre) || ''}</td>
+                <td>${fechaDisplay}</td>
+                <td>${reserva.horaInicio || ''}</td>
+                <td>${reserva.horaFin || ''}</td>
+                <td><span class="badge ${badgeClass}">${reserva.estado || ''}</span></td>
+                <td>${accionesHTML}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error al cargar reservas:', error);
+        alert('Error al cargar reservas: ' + error.message);
+    }
+}
+
+async function eliminarReserva(id) {
+    if (confirm('¿Está seguro de eliminar esta reserva?')) {
+        try {
+            await RequestHelper.delete(`/reservas/${id}`);
+            // actualizar la tabla en vivo
+            cargarReservas();
+        } catch (error) {
+            alert('Error al eliminar reserva: ' + error.message);
+        }
+    }
+}
+
+async function cargarUsuariosYCanchas() {
+    try {
+        // Cargar usuarios
+        const usuariosResponse = await RequestHelper.get('/usuarios');
+        const usuariosSelect = document.getElementById('usuarioId');
+
+        if (usuariosSelect) {
+            usuariosSelect.innerHTML = '<option value="">Seleccionar usuario</option>';
+            usuariosResponse.data.forEach(usuario => {
+                const option = document.createElement('option');
+                option.value = usuario.id;
+                option.textContent = `${usuario.nombre} (${usuario.usuario || ''})`;
+                usuariosSelect.appendChild(option);
+            });
+        }
+
+        // Cargar canchas
+        const canchasResponse = await RequestHelper.get('/canchas');
+        const canchasSelect = document.getElementById('canchaId');
+
+        if (canchasSelect) {
+            canchasSelect.innerHTML = '<option value="">Seleccionar cancha</option>';
+            canchasResponse.data.forEach(cancha => {
+                const option = document.createElement('option');
+                option.value = cancha.id;
+                option.textContent = `${cancha.nombre} - ${cancha.deporte} ($${cancha.precioHora?.toLocaleString?.() || cancha.precioHora}/hora)`;
+                canchasSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        alert('Error al cargar datos: ' + error.message);
+    }
+}
+
+async function cargarReserva(id) {
+    try {
+        const response = await RequestHelper.get(`/reservas/${id}`);
+        if (!response || !response.data) throw new Error('Reserva no encontrada');
+        const reserva = response.data;
+
+        document.getElementById('reservaId').value = reserva.id;
+        document.getElementById('usuarioId').value = reserva.usuarioId || (reserva.usuario && reserva.usuario.id) || '';
+        document.getElementById('canchaId').value = reserva.canchaId || (reserva.cancha && reserva.cancha.id) || '';
+        // Asignar fecha exactamente como viene del backend (yyyy-MM-dd)
+        document.getElementById('fecha').value = reserva.fecha;
+        document.getElementById('horaInicio').value = reserva.horaInicio || '';
+        document.getElementById('horaFin').value = reserva.horaFin || '';
+        document.getElementById('estado').value = reserva.estado || 'ACTIVA';
+    } catch (error) {
+        alert('Error al cargar reserva: ' + error.message);
+    }
+}
+
+async function guardarReserva(e) {
+    e.preventDefault();
+
+    const reservaData = {
+        usuarioId: parseInt(document.getElementById('usuarioId').value),
+        canchaId: parseInt(document.getElementById('canchaId').value),
+        fecha: document.getElementById('fecha').value, // yyyy-MM-dd
+        horaInicio: document.getElementById('horaInicio').value,
+        horaFin: document.getElementById('horaFin').value,
+        estado: document.getElementById('estado') ? document.getElementById('estado').value : 'ACTIVA'
+    };
+
+    const reservaId = document.getElementById('reservaId').value;
+
+    try {
+        if (reservaId) {
+            await RequestHelper.put(`/reservas/${reservaId}`, reservaData);
+            alert('Reserva actualizada correctamente');
+        } else {
+            await RequestHelper.post('/reservas', reservaData);
+            alert('Reserva creada correctamente');
+        }
+
+        // actualizar la lista en vivo
+        if (window.top !== window.self) {
+            // si estamos dentro de iframe, cambiar src del iframe para forzar recarga controlada
+            window.top.document.querySelector('iframe[name="myFrame"]').src = 'reservas.html';
+        } else {
+            // Si la lista está visible, recargar datos sin refrescar la página
+            if (document.getElementById('tablaReservas')) {
+                cargarReservas();
+            } else {
+                window.location.href = 'reservas.html';
+            }
+        }
+    } catch (error) {
+        alert('Error al guardar reserva: ' + error.message);
+    }
+}
+
+// Solo cargar usuarios y canchas si estamos en el formulario de reservas
+if (document.getElementById('reservaForm')) {
+    document.addEventListener('DOMContentLoaded', cargarUsuariosYCanchas);
+}
+
+// =========================
+// Verificar y actualizar estado automáticamente (sin recargar)
+// =========================
+async function verificarYActualizarReservas() {
+    try {
+        const response = await RequestHelper.get('/reservas');
+        if (!response || !response.data) return;
+        const reservas = response.data;
+
+        const ahora = new Date();
+        let huboCambios = false;
+
+        for (const reserva of reservas) {
+            if (!reserva.estado) continue;
+            // Solo ACTIVA puede pasar a FINALIZADA automáticamente
+            if (reserva.estado === 'ACTIVA') {
+                // Construimos fecha/hora en formato ISO local para comparación
+                // Reserva.fecha viene como 'yyyy-MM-dd', reserva.horaFin como 'HH:mm:ss' o 'HH:mm'
+                const horaFin = reserva.horaFin ? reserva.horaFin : '00:00:00';
+                const iso = `${reserva.fecha}T${horaFin}`;
+                const fechaHoraFin = new Date(iso);
+
+                if (ahora > fechaHoraFin) {
+                    try {
+                        // Llamamos al endpoint PUT /reservas/{id} con estado FINALIZADA
+                        const payload = {
+                            usuarioId: reserva.usuarioId || (reserva.usuario && reserva.usuario.id),
+                            canchaId: reserva.canchaId || (reserva.cancha && reserva.cancha.id),
+                            fecha: reserva.fecha,
+                            horaInicio: reserva.horaInicio,
+                            horaFin: reserva.horaFin,
+                            estado: 'FINALIZADA'
+                        };
+                        await RequestHelper.put(`/reservas/${reserva.id}`, payload);
+                        huboCambios = true;
+                    } catch (err) {
+                        console.error(`Error actualizando reserva ${reserva.id}:`, err);
+                    }
+                }
+            }
+        }
+
+        if (huboCambios && document.getElementById('tablaReservas')) {
+            // recargar la tabla en vivo
+            cargarReservas();
+        }
+    } catch (error) {
+        console.error('Error al verificar reservas:', error);
+    }
+}
+
+// Ejecutar la verificación al cargar y cada 30 segundos
+document.addEventListener('DOMContentLoaded', () => {
+    verificarYActualizarReservas();
+    setInterval(verificarYActualizarReservas, 30000); // 30s
+});
+
+
+usuarios.js:
+// Verificar si estamos en una página que necesita este script
+if (document.getElementById('tablaUsuarios') || window.location.pathname.includes('form_usuarios.html')) {
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar si el usuario está logueado
+        if (!SessionHelper.isLoggedIn()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // Solo ejecutar en páginas específicas
+        if (document.getElementById('tablaUsuarios')) {
+            const isAdmin = SessionHelper.isAdmin();
+
+            // Ocultar acciones si no es admin
+            const adminActions = document.getElementById('adminActions');
+            const actionsHeader = document.getElementById('actionsHeader');
+            if (!isAdmin) {
+                if (adminActions) adminActions.style.display = 'none';
+                if (actionsHeader) actionsHeader.style.display = 'none';
+            } else {
+                if (adminActions) adminActions.style.display = 'block';
+                if (actionsHeader) actionsHeader.style.display = 'table-cell';
+            }
+
+            cargarUsuarios();
+        }
+
+        // Configurar formulario si existe
+        const usuarioForm = document.getElementById('usuarioForm');
+        if (usuarioForm) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const usuarioId = urlParams.get('id');
+
+            if (usuarioId) {
+                const formTitle = document.getElementById('formTitle');
+                if (formTitle) formTitle.textContent = '👥 Editar Usuario';
+                cargarUsuario(usuarioId);
+            }
+
+            usuarioForm.addEventListener('submit', guardarUsuario);
+        }
+    });
+}
+
+async function cargarUsuarios() {
+    try {
+        const response = await RequestHelper.get('/usuarios');
+
+        // Verificar estructura de respuesta
+        if (!response || !response.data) {
+            console.error('Respuesta inválida:', response);
+            return;
+        }
+
+        const usuarios = response.data;
+        const tbody = document.getElementById('tablaUsuarios');
+
+        // Verificar que el elemento existe
+        if (!tbody) {
+            console.error('No se encontró el elemento tablaUsuarios');
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        const currentUser = SessionHelper.getUser();
+        const isAdmin = SessionHelper.isAdmin();
+
+        usuarios.forEach(usuario => {
+            const tr = document.createElement('tr');
+
+            let accionesHTML = '';
+            if (isAdmin) {
+                accionesHTML = `
+                    <a href="form_usuarios.html?id=${usuario.id}" class="btn btn-sm btn-warning">Editar</a>
+                    <button onclick="eliminarUsuario(${usuario.id})" class="btn btn-sm btn-danger">Eliminar</button>
+                `;
+            } else {
+                accionesHTML = '<span class="text-muted">Solo lectura</span>';
+            }
+
+            // Determinar clase del badge según el rol
+            let badgeClass = 'bg-secondary';
+            if (usuario.rol === 'ADMIN') badgeClass = 'bg-danger';
+            else if (usuario.rol === 'OPERATOR') badgeClass = 'bg-warning text-dark';
+            else if (usuario.rol === 'USER') badgeClass = 'bg-info';
+
+            tr.innerHTML = `
+                <td>${usuario.id}</td>
+                <td>${usuario.cedula}</td>
+                <td>${usuario.nombre}</td>
+                <td>${usuario.email}</td>
+                <td>${usuario.usuario}</td>
+                <td><span class="badge ${badgeClass}">${usuario.rol}</span></td>
+                <td>${accionesHTML}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+        alert('Error al cargar usuarios: ' + error.message);
+    }
+}
+
+async function eliminarUsuario(id) {
+    if (confirm('¿Está seguro de eliminar este usuario?')) {
+        try {
+            await RequestHelper.delete(`/usuarios/${id}`);
+            cargarUsuarios();
+        } catch (error) {
+            alert('Error al eliminar usuario: ' + error.message);
+        }
+    }
+}
+
+async function cargarUsuario(id) {
+    try {
+        const response = await RequestHelper.get(`/usuarios/${id}`);
+        const usuario = response.data;
+
+        document.getElementById('usuarioId').value = usuario.id;
+        document.getElementById('cedula').value = usuario.cedula;
+        document.getElementById('nombre').value = usuario.nombre;
+        document.getElementById('email').value = usuario.email;
+        document.getElementById('usuario').value = usuario.usuario;
+        document.getElementById('contraseña').value = usuario.contraseña;
+        document.getElementById('rol').value = usuario.rol;
+    } catch (error) {
+        alert('Error al cargar usuario: ' + error.message);
+    }
+}
+
+async function guardarUsuario(e) {
+    e.preventDefault();
+
+    const usuarioData = {
+        cedula: document.getElementById('cedula').value,
+        nombre: document.getElementById('nombre').value,
+        email: document.getElementById('email').value,
+        usuario: document.getElementById('usuario').value,
+        contraseña: document.getElementById('contraseña').value,
+        rol: document.getElementById('rol').value
+    };
+
+    const usuarioId = document.getElementById('usuarioId').value;
+
+    try {
+        if (usuarioId) {
+            usuarioData.id = parseInt(usuarioId);
+            await RequestHelper.put(`/usuarios/${usuarioId}`, usuarioData);
+            alert('Usuario actualizado correctamente');
+        } else {
+            await RequestHelper.post('/usuarios', usuarioData);
+            alert('Usuario creado correctamente');
+        }
+
+        window.location.href = 'usuarios.html';
+    } catch (error) {
+        alert('Error al guardar usuario: ' + error.message);
+    }
+}
+
+
+bienvenida.html:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenida</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .welcome-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.2rem 1rem;        /* 🔽 antes era 2rem, ahora más compacto */
+            margin: 0.4rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 180px;           /* 🔽 altura más baja pero consistente */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;     /* centra el contenido verticalmente */
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .feature-card img {
+            height: 42px;                /* 🔽 ligeramente más pequeño */
+            margin-bottom: 0.25rem;
+            margin-top: 1rem;
+        }
+
+        .feature-card h3 {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 2rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+        .features-container {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="welcome-container">
+        <div class="welcome-icon">🏆</div>
+        <h1>Bienvenido al Sistema de Reservas Deportivas</h1>
+        <p class="lead">Gestiona usuarios, canchas y reservas de manera eficiente</p>
+
+        <div class="features-container">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <a class="nav-link" href="usuarios.html" target="myFrame"><img src="img/usuarios.png" height="36" class="me-2" alt="Logo"/><h3>Usuarios</h3></a>
+                        <p>Gestiona los usuarios del sistema y sus permisos</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <a class="nav-link" href="canchas.html" target="myFrame"><img src="img/cancha.png" height="36" class="me-2" alt="Logo"/><h3>Canchas</h3></a>
+                        <p>Administra las canchas deportivas disponibles</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <a class="nav-link" href="reservas.html" target="myFrame"><img src="img/reservas.png" height="36" class="me-2" alt="Logo"/><h3>Reservas</h3></a>
+                        <p>Controla las reservas y horarios de las canchas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <p>Selecciona una opción del menú superior para comenzar</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+canchas.html:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Canchas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body class="fade-in">
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success">
+            <h2 class="mb-0 text-white">🏟️ Gestión de Canchas</h2>
+        </div>
+        <div class="card-body">
+            <div class="mb-3" id="adminActions">
+                <a href="form_canchas.html" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Agregar Cancha
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Deporte</th>
+                        <th>Ubicación</th>
+                        <th>Precio/Hora</th>
+                        <th>Estado</th>
+                        <th id="actionsHeader">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tablaCanchas"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/request.js"></script>
+<script src="js/canchas.js"></script>
+</body>
+</html>
+
+
+form_canchas.html:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario Cancha</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success">
+            <h2 class="mb-0 text-white" id="formTitle">🏟️ Agregar Cancha</h2>
+        </div>
+        <div class="card-body">
+            <form id="canchaForm">
+                <input type="hidden" id="canchaId">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="nombre" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="nombre" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="deporte" class="form-label">Deporte *</label>
+                        <select class="form-select" id="deporte" required>
+                            <option value="">Seleccionar deporte</option>
+                            <option value="Fútbol">Fútbol</option>
+                            <option value="Básquetbol">Básquetbol</option>
+                            <option value="Voleibol">Voleibol</option>
+                            <option value="Tenis">Tenis</option>
+                            <option value="Pádel">Pádel</option>
+                            <option value="Rugby">Rugby</option>
+                            <option value="Múltiple">Múltiple</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="ubicacion" class="form-label">Ubicación *</label>
+                        <input type="text" class="form-control" id="ubicacion" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="precioHora" class="form-label">Precio por Hora *</label>
+                        <input type="number" class="form-control" id="precioHora" step="1000" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="estado" class="form-label">Estado *</label>
+                        <select class="form-select" id="estado" required>
+                            <option value="ACTIVA">Activa</option>
+                            <option value="INACTIVA">Inactiva</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <a href="canchas.html" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/request.js"></script>
+<script src="js/canchas.js"></script>
+</body>
+</html>
+
+
+form_reservas.html:
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario Reserva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning">
+            <h2 class="mb-0 text-dark" id="formTitle">📅 Nueva Reserva</h2>
+        </div>
+        <div class="card-body">
+            <form id="reservaForm">
+                <input type="hidden" id="reservaId">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="usuarioId" class="form-label">Usuario *</label>
+                        <select class="form-select" id="usuarioId" required>
+                            <option value="">Seleccionar usuario</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="canchaId" class="form-label">Cancha *</label>
+                        <select class="form-select" id="canchaId" required>
+                            <option value="">Seleccionar cancha</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="fecha" class="form-label">Fecha *</label>
+                        <input type="date" class="form-control" id="fecha" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="horaInicio" class="form-label">Hora Inicio *</label>
+                        <input type="time" class="form-control" id="horaInicio" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="horaFin" class="form-label">Hora Fin *</label>
+                        <input type="time" class="form-control" id="horaFin" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="estado" class="form-label">Estado *</label>
+                        <select class="form-select" id="estado" required>
+                            <option value="ACTIVA">Activa</option>
+                            <option value="FINALIZADA">Finalizada</option>
+                            <option value="CANCELADA">Cancelada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <a href="reservas.html" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Mantengo el orden: request.js (comunicaciones) luego reservas.js (lógica) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/request.js"></script>
+<script src="js/reservas.js"></script>
+</body>
+</html>
+
+
+form_usuarios.html:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario Usuario</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary">
+            <h2 class="mb-0 text-white" id="formTitle">👥 Agregar Usuario</h2>
+        </div>
+        <div class="card-body">
+            <form id="usuarioForm">
+                <input type="hidden" id="usuarioId">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="cedula" class="form-label">Cédula *</label>
+                        <input type="text" class="form-control" id="cedula" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="nombre" class="form-label">Nombre Completo *</label>
+                        <input type="text" class="form-control" id="nombre" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="usuario" class="form-label">Nombre de Usuario *</label>
+                        <input type="text" class="form-control" id="usuario" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="contraseña" class="form-label">Contraseña *</label>
+                        <input type="password" class="form-control" id="contraseña" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="rol" class="form-label">Rol *</label>
+                        <select class="form-select" id="rol" required>
+                            <option value="">Seleccionar rol</option>
+                            <option value="ADMIN">Administrador</option>
+                            <option value="OPERATOR">Operador</option>
+                            <option value="USER">Usuario</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <a href="usuarios.html" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/request.js"></script>
+<script src="js/usuarios.js"></script>
+</body>
+</html>
+
+
+index.html:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet" type="text/css"/>
+    <title>Sistema de Reservas Deportivas - Login</title>
+
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Fondo principal con scroll habilitado */
+        .login-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: block; /* 🔹 antes era flex, lo cambiamos para permitir scroll */
+            padding: 2rem 0;
+        }
+
+        .container-fluid {
+            width: 100%;
+            max-width: 98%;
+        }
+
+        .container {
+            max-width: 96%;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: rgba(255, 255, 255, 0.95);
+            color: #2c3e50;
+            padding: 3rem 1rem;
+            border-radius: 25px;
+            margin-bottom: 3rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-section h1 {
+            font-size: 2.8rem;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+
+        /* Login section ampliada */
+        .login-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            margin-bottom: 3rem;
+        }
+
+        .system-info {
+            padding: 3rem;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+        }
+
+        .system-info h3,
+        .system-info h5,
+        .system-info h6 {
+            color: white !important;
+            font-weight: 600;
+        }
+
+        .welcome-text {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            margin-bottom: 1.7rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .system-info ul li {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.6rem;
+            font-size: 1.05rem;
+        }
+
+        .login-btn {
+            padding: 1.2rem 2.5rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+            min-width: 240px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-btn .material-icons {
+            font-size: 1.6rem;
+            margin-right: 8px;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 1.2rem;
+        }
+
+        .feature-card small {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .demo-credentials {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.2rem;
+            margin-top: 1.5rem;
+        }
+
+        footer {
+            margin-top: 3rem;
+            font-size: 1rem;
+        }
+
+        footer p {
+            margin-bottom: 0.3rem;
+        }
+
+        @media (max-width: 992px) {
+            .system-info {
+                padding: 2.5rem 1.5rem;
+            }
+
+            .hero-section {
+                padding: 2.5rem 1rem;
+            }
+
+            .login-btn {
+                font-size: 1.25rem;
+                padding: 1rem 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                max-width: 98%;
+            }
+
+            .hero-section {
+                padding: 2rem 1rem;
+            }
+
+            .feature-icon {
+                width: 45px;
+                height: 45px;
+            }
+
+            .login-btn {
+                width: 100%;
+                font-size: 1.15rem;
+                padding: 0.9rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="login-page">
+<div class="container-fluid">
+    <div class="container">
+        <div class="hero-section mx-auto" style="max-width: 85%; padding: 2rem 1.5rem;">
+            <div class="row align-items-center">
+                <div class="col-12 text-center">
+                    <h1 class="display-6 fw-bold text-primary mb-3">
+                        Sistema de Reservas Deportivas
+                    </h1>
+                    <p class="lead text-dark mb-0">
+                        Plataforma integral para la gestión eficiente de canchas, usuarios y reservas deportivas
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-xxl-11 col-lg-12">
+                <div class="login-section">
+                    <div class="row g-0">
+                        <!-- Información del sistema -->
+                        <div class="col-lg-6 system-info">
+                            <h3 class="mb-4 text-white">Bienvenido al Sistema</h3>
+                            <p class="welcome-text">
+                                Plataforma especializada para la gestión integral de reservas en instalaciones
+                                deportivas.
+                                Optimiza el uso de tus canchas y mejora la experiencia de tus usuarios.
+                            </p>
+
+                            <div class="mb-4">
+                                <h5 class="text-white mb-3">Funcionalidades para Administradores</h5>
+                                <ul class="list-unstyled">
+                                    <li>• Gestión completa de usuarios y permisos</li>
+                                    <li>• Administración de canchas y disponibilidad</li>
+                                    <li>• Control y monitoreo de reservas en tiempo real</li>
+                                    <li>• Reportes detallados y estadísticas avanzadas</li>
+                                    <li>• Configuración de horarios y tarifas</li>
+                                </ul>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5 class="text-white mb-3">Beneficios para Usuarios</h5>
+                                <ul class="list-unstyled">
+                                    <li>• Reserva rápida de canchas disponibles</li>
+                                    <li>• Visualización de horarios en tiempo real</li>
+                                    <li>• Gestión personal de reservas activas</li>
+                                    <li>• Historial completo de actividades</li>
+                                    <li>• Notificaciones automáticas y recordatorios</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top border-light">
+                                <h6 class="text-white mb-2">💬 Soporte Técnico</h6>
+                                <p class="welcome-text mb-0">¿Necesitas ayuda? Nuestro equipo de soporte está disponible
+                                    para asistirte.</p>
+                            </div>
+                        </div>
+
+                        <!-- Formulario -->
+                        <div class="col-lg-6">
+                            <div class="p-5">
+                                <div class="text-center mb-4">
+                                    <img src="img/logo.png" alt="Logo Reservas Deportivas" height="80" class="mb-3"/>
+                                    <h3 class="fw-bold text-dark mb-2">INICIAR SESIÓN</h3>
+                                    <p class="text-muted">Ingresa tus credenciales para acceder al sistema</p>
+                                </div>
+
+                                <form id="loginForm">
+                                    <div class="mb-3">
+                                        <label for="icon_user" class="form-label fw-semibold text-dark">
+                                            <i class="material-icons me-2"
+                                               style="vertical-align: middle; color: #3498db;">person</i>
+                                            Usuario
+                                        </label>
+                                        <input id="icon_user" type="text" name="usuario"
+                                               class="form-control form-control-lg"
+                                               placeholder="Ingresa tu usuario" required value="admin">
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label for="icon_pass" class="form-label fw-semibold text-dark">
+                                            <i class="material-icons me-2"
+                                               style="vertical-align: middle; color: #3498db;">lock</i>
+                                            Contraseña
+                                        </label>
+                                        <input id="icon_pass" type="password" name="password"
+                                               class="form-control form-control-lg"
+                                               placeholder="Ingresa tu contraseña" required value="$2a$10$yourEncryptedPasswordHash">
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary login-btn fw-semibold">
+                                            <i class="material-icons">login</i> INGRESAR
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Credenciales demo -->
+                                <div class="demo-credentials">
+                                    <div class="text-center">
+                                        <small class="text-muted d-block mb-2"><strong>Credenciales de Prueba</strong></small>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2 mb-md-0">
+                                                <small class="fw-semibold text-dark">Administrador</small><br>
+                                                <small>usuario: <strong>admin</strong></small><br>
+                                                <small>contraseña: <strong>$2a$10$yourEncryptedPasswordHash</strong></small>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="fw-semibold text-dark">Usuario Normal</small><br>
+                                                <small>usuario: <strong>mariagonz</strong></small><br>
+                                                <small>contraseña: <strong>$2a$10$yourEncryptedPasswordHash</strong></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">
+                                        ¿Problemas para acceder?
+                                        <a href="#" class="text-decoration-none fw-semibold">Contactar Soporte</a>
+                                    </small>
+                                </div>
+
+                                <div class="mt-5 pt-4 border-top">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="feature-card">
+                                                <img src="img/usuarios.png" alt="Gestión de Usuarios"
+                                                     class="feature-icon mx-auto">
+                                                <small class="d-block fw-semibold">Usuarios</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="feature-card">
+                                                <img src="img/cancha.png" alt="Gestión de Canchas"
+                                                     class="feature-icon mx-auto">
+                                                <small class="d-block fw-semibold">Canchas</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="feature-card">
+                                                <img src="img/reservas.png" alt="Gestión de Reservas"
+                                                     class="feature-icon mx-auto">
+                                                <small class="d-block fw-semibold">Reservas</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="text-center mt-4 mb-3">
+                    <p class="text-light mb-1">
+                        &copy; 2025 Sistema de Reservas Deportivas - Proyecto inicial Entornos de Programación - Grupo
+                        E1
+                    </p>
+                    <p class="text-light opacity-75 small">
+                        Plataforma desarrollada para la gestión eficiente de instalaciones deportivas
+                    </p>
+                </footer>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/request.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>
+
+
+menu.html:
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sistema de Reservas Deportivas</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+          rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+          crossorigin="anonymous">
+    <link href="css/styles.css" rel="stylesheet">
+    <style>
+        .divider {
+            height: 1px;
+            background-color: rgba(0, 0, 0, .15);
+        }
+        .text-justify {
+            text-align: justify;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .user-info {
+            color: white;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+<header class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a href="menu.html" class="navbar-brand d-flex align-items-center">
+                <img src="img/logo.png" height="48" class="me-2" alt="Logo"/>
+                <span>Reservas Deportivas</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="usuarios.html" target="myFrame"><img src="img/usuarios.png" height="36" class="me-2" alt="Logo"/>Usuarios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="canchas.html" target="myFrame"><img src="img/cancha.png" height="36" class="me-2" alt="Logo"/>Canchas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="reservas.html" target="myFrame"><img src="img/reservas.png" height="36" class="me-2" alt="Logo"/>Reservas</a>
+                    </li>
+                </ul>
+                <div class="navbar-nav">
+                    <span id="userInfo" class="user-info nav-item nav-link"></span>
+                    <button id="btnCerrarSesion" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4" style="height: 75vh;">
+        <iframe name="myFrame" style="height: 100%; width:100%; border: none"
+                src="bienvenida.html" title="Contenido Principal"></iframe>
+    </div>
+</header>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+<script src="js/request.js"></script>
+<script src="js/menu.js"></script>
+</body>
+</html>
+
+
+reservas.html:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Reservas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body class="fade-in">
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning">
+            <h2 class="mb-0 text-dark">📅 Gestión de Reservas</h2>
+        </div>
+        <div class="card-body">
+            <div class="mb-3" id="adminActions">
+                <a href="form_reservas.html" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Nueva Reserva
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Cancha</th>
+                        <th>Fecha</th>
+                        <th>Hora Inicio</th>
+                        <th>Hora Fin</th>
+                        <th>Estado</th>
+                        <th id="actionsHeader">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tablaReservas"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/request.js"></script>
+<script src="js/reservas.js"></script>
+</body>
+</html>
+
+
+usuarios.html:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Usuarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body class="fade-in">
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary">
+            <h2 class="mb-0 text-white">👥 Gestión de Usuarios</h2>
+        </div>
+        <div class="card-body">
+            <div class="mb-3" id="adminActions">
+                <a href="form_usuarios.html" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Agregar Usuario
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Cédula</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th id="actionsHeader">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tablaUsuarios"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/request.js"></script>
+<script src="js/usuarios.js"></script>
+</body>
+</html>
+
+application.properties:
+spring.application.name=ProyectoInicial
+spring.datasource.url=jdbc:mysql://localhost:3306/ProyectoInicial?serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=poppet1234Hpoppet1234H
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+# Reducir logs de Hibernate (opcional)
+logging.level.org.hibernate.orm.connections.pooling=WARN
+logging.level.org.hibernate=INFO
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+
+# Configuración explícita de HikariCP para logs más limpios
+spring.datasource.hikari.connection-timeout=20000
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.idle-timeout=300000
+spring.datasource.hikari.max-lifetime=1200000
+
+spring.jackson.time-zone=America/Bogota
+spring.jackson.locale=es_CO
+
+server.port=8095
+
+
+pom.xml:
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.6</version>
+		<relativePath/>
+	</parent>
+	<groupId>uis.edu.entorno.proyecto.inicial</groupId>
+	<artifactId>ProyectoInicial</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>ProyectoInicial</name>
+	<description>Backend de Proyecto Inicial con Spring Boot</description>
+
+	<properties>
+		<java.version>17</java.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+</project>
+
+
+PoryectoInicial.sql:
+-- Script SQL para ProyectoInicial - Reservas de Canchas Deportivas en Colombia
+-- Eliminar base de datos si existe y crearla nuevamente
+DROP DATABASE IF EXISTS ProyectoInicial;
+CREATE DATABASE ProyectoInicial;
+USE ProyectoInicial;
+
+-- Crear tabla usuarios
+CREATE TABLE usuarios (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  cedula VARCHAR(20) UNIQUE NOT NULL,
+  nombre VARCHAR(100) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  usuario VARCHAR(50) UNIQUE NOT NULL,
+  contraseña VARCHAR(255) NOT NULL COMMENT 'Contraseña encriptada con BCrypt',
+  rol VARCHAR(20) NOT NULL COMMENT 'ADMIN, USER',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Crear tabla canchas
+CREATE TABLE canchas (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  nombre VARCHAR(100) NOT NULL,
+  deporte VARCHAR(50) NOT NULL,
+  ubicacion VARCHAR(150) NOT NULL,
+  precio_hora DECIMAL(10,2) NOT NULL,
+  estado VARCHAR(20) DEFAULT 'ACTIVA' COMMENT 'ACTIVA, INACTIVA',
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Crear tabla reservas
+CREATE TABLE reservas (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  usuario_id INT NOT NULL,
+  cancha_id INT NOT NULL,
+  fecha DATE NOT NULL,
+  hora_inicio TIME NOT NULL,
+  hora_fin TIME NOT NULL,
+  estado VARCHAR(20) DEFAULT 'ACTIVA' COMMENT 'ACTIVA, CANCELADA',
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+  FOREIGN KEY (cancha_id) REFERENCES canchas(id)
+);
+
+-- Insertar administradores (3 administradores)
+-- Contraseñas: todas son "password123" encriptadas con BCrypt
+INSERT INTO usuarios (cedula, nombre, email, usuario, contraseña, rol) VALUES
+('1005451321', 'Juan David', 'juan2214111@correo.uis.edu.co', 'admin', '123', 'ADMIN'),
+('987654321', 'Ana Operadora', 'ana.operadora@proyectoinicial.com', 'anaoperator', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'ADMIN'),
+('456789123', 'Luis Manager', 'luis.manager@proyectoinicial.com', 'luismanager', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'ADMIN');
+
+-- Insertar clientes (10 clientes)
+INSERT INTO usuarios (cedula, nombre, email, usuario, contraseña, rol) VALUES
+('1001234567', 'María González', 'maria.gonzalez@email.com', 'mariagonz', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1002345678', 'Juan Pérez', 'juan.perez@email.com', 'juanperez', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1003456789', 'Laura Martínez', 'laura.martinez@email.com', 'lauramart', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1004567890', 'Carlos Rodríguez', 'carlos.rodriguez@email.com', 'carlosrod', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1005678901', 'Ana López', 'ana.lopez@email.com', 'analopez', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1006789012', 'David Hernández', 'david.hernandez@email.com', 'davidher', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1007890123', 'Sofia Díaz', 'sofia.diaz@email.com', 'sofiadiaz', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1008901234', 'Miguel Torres', 'miguel.torres@email.com', 'migueltor', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1009012345', 'Isabella Ramírez', 'isabella.ramirez@email.com', 'isabellar', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER'),
+('1010123456', 'Andrés Silva', 'andres.silva@email.com', 'andressil', '$2a$10$ABCDEFGHIJKLMNOPQRSTUVWXYZ012345', 'USER');
+
+-- Insertar canchas (10 canchas en diferentes ciudades de Colombia)
+INSERT INTO canchas (nombre, deporte, ubicacion, precio_hora, estado) VALUES
+('Cancha Principal Fútbol 5', 'Fútbol', 'Bogotá, Localidad de Chapinero, Cr 15 #45-20', 45000.00, 'ACTIVA'),
+('Cancha Sintética El Gol', 'Fútbol', 'Medellín, Barrio El Poblado, Cl 10 #40-35', 50000.00, 'ACTIVA'),
+('Cancha Techada Los Deportistas', 'Fútbol', 'Cali, Barrio Granada, Av 5N #20-15', 40000.00, 'ACTIVA'),
+('Cancha Básquet Centro', 'Básquetbol', 'Barranquilla, Centro, Cr 44 #35-10', 30000.00, 'ACTIVA'),
+('Cancha Voleibol Playa', 'Voleibol', 'Cartagena, Bocagrande, Av San Martín #5-60', 35000.00, 'ACTIVA'),
+('Cancha Múltiple', 'Múltiple', 'Bucaramanga, Cabecera, Cl 34 #25-40', 38000.00, 'ACTIVA'),
+('Cancha Tenis Club', 'Tenis', 'Pereira, Barrio Cuba, Av Circunvalar #12-30', 55000.00, 'ACTIVA'),
+('Cancha Fútbol 7 La Victoria', 'Fútbol', 'Bogotá, Localidad de Usaquén, Tv 15 #120-25', 48000.00, 'ACTIVA'),
+('Cancha Sintética Padel', 'Pádel', 'Medellín, Laureles, Cr 70 #25-15', 42000.00, 'INACTIVA'),
+('Cancha Rugby Los Andes', 'Rugby', 'Bogotá, Localidad de Suba, Cl 145 #90-10', 47000.00, 'ACTIVA');
+
+-- Insertar reservas (8 reservas interconectadas)
+INSERT INTO reservas (usuario_id, cancha_id, fecha, hora_inicio, hora_fin, estado) VALUES
+(4, 1, '2024-01-15', '14:00:00', '16:00:00', 'ACTIVA'),  -- Carlos Rodríguez reserva Cancha Principal Fútbol 5
+(5, 2, '2024-01-15', '16:00:00', '18:00:00', 'ACTIVA'),  -- Ana López reserva Cancha Sintética El Gol
+(6, 3, '2024-01-16', '10:00:00', '12:00:00', 'ACTIVA'),  -- David Hernández reserva Cancha Techada Los Deportistas
+(7, 4, '2024-01-16', '12:00:00', '14:00:00', 'CANCELADA'), -- Sofia Díaz reserva Cancha Básquet Centro (cancelada)
+(8, 5, '2024-01-17', '15:00:00', '17:00:00', 'ACTIVA'),  -- Miguel Torres reserva Cancha Voleibol Playa
+(9, 6, '2024-01-17', '17:00:00', '19:00:00', 'ACTIVA'),  -- Isabella Ramírez reserva Cancha Múltiple
+(10, 7, '2024-01-18', '09:00:00', '11:00:00', 'ACTIVA'), -- Andrés Silva reserva Cancha Tenis Club
+(4, 8, '2024-01-18', '11:00:00', '13:00:00', 'ACTIVA');  -- Carlos Rodríguez reserva Cancha Fútbol 7 La Victoria
+
+-- Consultas de ejemplo para verificar los datos
+SELECT '=== USUARIOS ===' AS '';
+SELECT * FROM usuarios;
+
+SELECT '=== CANCHAS ===' AS '';
+SELECT * FROM canchas;
+
+SELECT '=== RESERVAS CON DETALLES ===' AS '';
+SELECT 
+    r.id,
+    u.nombre AS usuario,
+    c.nombre AS cancha,
+    c.deporte,
+    r.fecha,
+    r.hora_inicio,
+    r.hora_fin,
+    r.estado,
+    c.precio_hora,
+    TIMESTAMPDIFF(HOUR, r.hora_inicio, r.hora_fin) * c.precio_hora AS total
+FROM reservas r
+JOIN usuarios u ON r.usuario_id = u.id
+JOIN canchas c ON r.cancha_id = c.id
+ORDER BY r.fecha, r.hora_inicio;
+
+-- Consulta específica para ver reservas activas
+SELECT '=== RESERVAS ACTIVAS ===' AS '';
+SELECT 
+    r.id,
+    u.nombre AS usuario,
+    c.nombre AS cancha,
+    r.fecha,
+    CONCAT(r.hora_inicio, ' - ', r.hora_fin) AS horario,
+    c.ubicacion
+FROM reservas r
+JOIN usuarios u ON r.usuario_id = u.id
+JOIN canchas c ON r.cancha_id = c.id
+WHERE r.estado = 'ACTIVA'
+ORDER BY r.fecha, r.hora_inicio;
+
+
+
+

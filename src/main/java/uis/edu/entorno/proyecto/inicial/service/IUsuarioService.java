@@ -9,9 +9,11 @@ public interface IUsuarioService {
     Optional<Usuario> findById(Integer id);
     Optional<Usuario> findByCedula(String cedula);
     Optional<Usuario> findByEmail(String email);
+    Optional<Usuario> findByUsuario(String usuario);
     Usuario create(Usuario usuario);
     Usuario update(Usuario usuario);
     void delete(Integer id);
     boolean existsByCedula(String cedula);
     boolean existsByEmail(String email);
+    boolean existsByUsuario(String usuario); // AGREGAR ESTE MÉTODO
 }

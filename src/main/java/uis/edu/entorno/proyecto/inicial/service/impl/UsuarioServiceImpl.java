@@ -1,10 +1,13 @@
 package uis.edu.entorno.proyecto.inicial.service.impl;
 
 import uis.edu.entorno.proyecto.inicial.model.Usuario;
+import uis.edu.entorno.proyecto.inicial.model.Reserva;
 import uis.edu.entorno.proyecto.inicial.repository.UsuarioRepository;
+import uis.edu.entorno.proyecto.inicial.repository.ReservaRepository;
 import uis.edu.entorno.proyecto.inicial.service.IUsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +16,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ReservaRepository reservaRepository;
 
     @Override
     public List<Usuario> findAll() {
@@ -35,6 +41,11 @@ public class UsuarioServiceImpl implements IUsuarioService {
     }
 
     @Override
+    public Optional<Usuario> findByUsuario(String usuario) {
+        return usuarioRepository.findByUsuario(usuario);
+    }
+
+    @Override
     public Usuario create(Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
@@ -45,7 +56,13 @@ public class UsuarioServiceImpl implements IUsuarioService {
     }
 
     @Override
+    @Transactional
     public void delete(Integer id) {
+        // Eliminar todas las reservas asociadas al usuario primero
+        List<Reserva> reservasUsuario = reservaRepository.findByUsuarioId(id);
+        reservaRepository.deleteAll(reservasUsuario);
+
+        // Luego eliminar el usuario
         usuarioRepository.deleteById(id);
     }
 
@@ -57,5 +74,10 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Override
     public boolean existsByEmail(String email) {
         return usuarioRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsByUsuario(String usuario) {
+        return usuarioRepository.findByUsuario(usuario).isPresent();
     }
 }

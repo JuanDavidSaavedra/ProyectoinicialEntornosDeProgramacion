@@ -16,4 +16,6 @@ public interface IReservaService {
     boolean isCanchaDisponible(Integer canchaId, String fecha, String horaInicio, String horaFin);
 
     Reserva update(Integer id, ReservaRequest reservaRequest);
+
+    void actualizarEstadosAutomaticamente();
 }

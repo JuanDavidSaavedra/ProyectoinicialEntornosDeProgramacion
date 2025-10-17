@@ -49,6 +49,27 @@
                         <input type="number" class="form-control" id="precioHora" step="1000" required>
                     </div>
                     <div class="col-md-6">
+                        <label for="capacidad" class="form-label">Capacidad de Personas *</label>
+                        <input type="number" class="form-control" id="capacidad" min="30" max="50" required>
+                        <div class="form-text">Mínimo 30 personas, máximo 50 personas</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="horaApertura" class="form-label">Hora de Apertura *</label>
+                        <input type="time" class="form-control" id="horaApertura" required>
+                        <div class="form-text">Hora en que abre la cancha (ej: 05:00 para 5:00 am)</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="horaCierre" class="form-label">Hora de Cierre *</label>
+                        <input type="time" class="form-control" id="horaCierre" required>
+                        <div class="form-text">Hora en que cierra la cancha (ej: 22:00 para 10:00 pm)</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
                         <label for="estado" class="form-label">Estado *</label>
                         <select class="form-select" id="estado" required>
                             <option value="ACTIVA">Activa</option>

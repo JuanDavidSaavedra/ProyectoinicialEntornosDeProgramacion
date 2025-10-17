@@ -2,6 +2,7 @@ package uis.edu.entorno.proyecto.inicial.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "canchas")
@@ -22,6 +23,15 @@ public class Cancha {
     @Column(name = "precio_hora", nullable = false)
     private Double precioHora;
 
+    @Column(name = "capacidad", nullable = false)
+    private Integer capacidad;
+
+    @Column(name = "hora_apertura", nullable = false)
+    private LocalTime horaApertura;
+
+    @Column(name = "hora_cierre", nullable = false)
+    private LocalTime horaCierre;
+
     @Column(name = "estado", length = 20)
     private String estado;
 
@@ -32,14 +42,20 @@ public class Cancha {
     public Cancha() {
         this.creadoEn = LocalDateTime.now();
         this.estado = "ACTIVA";
+        this.capacidad = 10;
+        this.horaApertura = LocalTime.of(5, 0); // 5:00 am por defecto
+        this.horaCierre = LocalTime.of(22, 0); // 10:00 pm por defecto
     }
 
-    public Cancha(String nombre, String deporte, String ubicacion, Double precioHora) {
+    public Cancha(String nombre, String deporte, String ubicacion, Double precioHora, Integer capacidad, LocalTime horaApertura, LocalTime horaCierre) {
         this();
         this.nombre = nombre;
         this.deporte = deporte;
         this.ubicacion = ubicacion;
         this.precioHora = precioHora;
+        this.capacidad = capacidad;
+        this.horaApertura = horaApertura;
+        this.horaCierre = horaCierre;
     }
 
     // Getters y Setters
@@ -57,6 +73,15 @@ public class Cancha {
 
     public Double getPrecioHora() { return precioHora; }
     public void setPrecioHora(Double precioHora) { this.precioHora = precioHora; }
+
+    public Integer getCapacidad() { return capacidad; }
+    public void setCapacidad(Integer capacidad) { this.capacidad = capacidad; }
+
+    public LocalTime getHoraApertura() { return horaApertura; }
+    public void setHoraApertura(LocalTime horaApertura) { this.horaApertura = horaApertura; }
+
+    public LocalTime getHoraCierre() { return horaCierre; }
+    public void setHoraCierre(LocalTime horaCierre) { this.horaCierre = horaCierre; }
 
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }

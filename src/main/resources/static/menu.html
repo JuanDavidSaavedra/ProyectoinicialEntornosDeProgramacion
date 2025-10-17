@@ -9,13 +9,6 @@
           crossorigin="anonymous">
     <link href="css/styles.css" rel="stylesheet">
     <style>
-        .divider {
-            height: 1px;
-            background-color: rgba(0, 0, 0, .15);
-        }
-        .text-justify {
-            text-align: justify;
-        }
         .navbar-brand {
             font-weight: bold;
         }
@@ -23,47 +16,89 @@
             color: white;
             margin-right: 15px;
         }
+        /* Estilos para el footer */
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 0.8rem 0;
+            border-top: 2px solid #3498db;
+        }
+        .footer p {
+            margin-bottom: 0.2rem;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .footer .lead {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        /* Iframe ocupa 90vh */
+        .content-frame {
+            height: 90vh;
+            border: none;
+            width: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
-<header class="container-fluid">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a href="menu.html" class="navbar-brand d-flex align-items-center">
-                <img src="img/logo.png" height="48" class="me-2" alt="Logo"/>
-                <span>Reservas Deportivas</span>
-            </a>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary py-2">
+    <div class="container">
+        <a href="menu.html" class="navbar-brand d-flex align-items-center">
+            <img src="img/logo.png" height="40" class="me-2" alt="Logo"/>
+            <span>Reservas Deportivas</span>
+        </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarNav" aria-controls="navbarNav"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="usuarios.html" target="myFrame"><img src="img/usuarios.png" height="36" class="me-2" alt="Logo"/>Usuarios</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="canchas.html" target="myFrame"><img src="img/cancha.png" height="36" class="me-2" alt="Logo"/>Canchas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="reservas.html" target="myFrame"><img src="img/reservas.png" height="36" class="me-2" alt="Logo"/>Reservas</a>
-                    </li>
-                </ul>
-                <div class="navbar-nav">
-                    <span id="userInfo" class="user-info nav-item nav-link"></span>
-                    <button id="btnCerrarSesion" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
-                </div>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="usuarios.html" target="myFrame">
+                        <img src="img/usuarios.png" height="32" class="me-1" alt="Usuarios"/>
+                        Usuarios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="canchas.html" target="myFrame">
+                        <img src="img/cancha.png" height="32" class="me-1" alt="Canchas"/>
+                        Canchas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="reservas.html" target="myFrame">
+                        <img src="img/reservas.png" height="32" class="me-1" alt="Reservas"/>
+                        Reservas
+                    </a>
+                </li>
+            </ul>
+            <div class="navbar-nav">
+                <span id="userInfo" class="user-info nav-item nav-link"></span>
+                <button id="btnCerrarSesion" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
             </div>
         </div>
-    </nav>
-    <div class="container mt-4" style="height: 75vh;">
-        <iframe name="myFrame" style="height: 100%; width:100%; border: none"
-                src="bienvenida.html" title="Contenido Principal"></iframe>
     </div>
-</header>
+</nav>
+
+<!-- Iframe -->
+<iframe name="myFrame" class="content-frame"
+        src="bienvenida.html" title="Contenido Principal"></iframe>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <p class="mb-1">&copy; 2025 Sistema de Reservas Deportivas - Proyecto inicial Entornos de Programación - Grupo E1</p>
+        <p class="lead">Plataforma desarrollada para la gestión eficiente de instalaciones deportivas</p>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"

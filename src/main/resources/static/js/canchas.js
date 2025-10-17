@@ -39,6 +39,21 @@ if (document.getElementById('tablaCanchas') || window.location.pathname.includes
     });
 }
 
+function formatTime(timeString) {
+    if (!timeString) return '';
+
+    if (timeString.includes('a. m.') || timeString.includes('p. m.')) {
+        return timeString;
+    }
+
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'p. m.' : 'a. m.';
+    const hour12 = hour % 12 || 12;
+    const minutesPart = minutes ? `:${minutes}` : '';
+    return `${hour12}${minutesPart} ${ampm}`;
+}
+
 async function cargarCanchas() {
     try {
         const response = await RequestHelper.get('/canchas');
@@ -79,6 +94,8 @@ async function cargarCanchas() {
                 <td><span class="badge bg-primary">${cancha.deporte}</span></td>
                 <td>${cancha.ubicacion}</td>
                 <td>$${cancha.precioHora.toLocaleString()}</td>
+                <td>${cancha.capacidad} personas</td>
+                <td>${formatTime(cancha.horaApertura)} - ${formatTime(cancha.horaCierre)}</td>
                 <td><span class="badge ${cancha.estado === 'ACTIVA' ? 'bg-success' : 'bg-secondary'}">${cancha.estado}</span></td>
                 <td>${accionesHTML}</td>
             `;
@@ -91,7 +108,7 @@ async function cargarCanchas() {
 }
 
 async function eliminarCancha(id) {
-    if (confirm('¿Está seguro de eliminar esta cancha?')) {
+    if (confirm('¿Está seguro de eliminar esta cancha? Se eliminarán también todas las reservas asociadas.')) {
         try {
             await RequestHelper.delete(`/canchas/${id}`);
             cargarCanchas();
@@ -111,6 +128,9 @@ async function cargarCancha(id) {
         document.getElementById('deporte').value = cancha.deporte;
         document.getElementById('ubicacion').value = cancha.ubicacion;
         document.getElementById('precioHora').value = cancha.precioHora;
+        document.getElementById('capacidad').value = cancha.capacidad;
+        document.getElementById('horaApertura').value = cancha.horaApertura;
+        document.getElementById('horaCierre').value = cancha.horaCierre;
         document.getElementById('estado').value = cancha.estado;
     } catch (error) {
         alert('Error al cargar cancha: ' + error.message);
@@ -125,6 +145,9 @@ async function guardarCancha(e) {
         deporte: document.getElementById('deporte').value,
         ubicacion: document.getElementById('ubicacion').value,
         precioHora: parseFloat(document.getElementById('precioHora').value),
+        capacidad: parseInt(document.getElementById('capacidad').value),
+        horaApertura: document.getElementById('horaApertura').value,
+        horaCierre: document.getElementById('horaCierre').value,
         estado: document.getElementById('estado').value
     };
 

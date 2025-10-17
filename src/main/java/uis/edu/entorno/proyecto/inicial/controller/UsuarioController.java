@@ -58,12 +58,35 @@ public class UsuarioController {
     @PostMapping
     public ResponseEntity<ApiResponse> createUsuario(@RequestBody Usuario usuario) {
         try {
-            // Validar que no exista usuario con misma cédula o email
+            // Validar campos requeridos
+            if (usuario.getCedula() == null || usuario.getCedula().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("La cédula es requerida"));
+            }
+            if (usuario.getNombre() == null || usuario.getNombre().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("El nombre es requerido"));
+            }
+            if (usuario.getEmail() == null || usuario.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("El email es requerido"));
+            }
+            if (usuario.getUsuario() == null || usuario.getUsuario().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("El nombre de usuario es requerido"));
+            }
+            if (usuario.getContraseña() == null || usuario.getContraseña().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("La contraseña es requerida"));
+            }
+            if (usuario.getRol() == null || usuario.getRol().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("El rol es requerido"));
+            }
+
+            // Verificar duplicados
             if (usuarioService.existsByCedula(usuario.getCedula())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Ya existe un usuario con esta cédula"));
             }
             if (usuarioService.existsByEmail(usuario.getEmail())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Ya existe un usuario con este email"));
+            }
+            if (usuarioService.existsByUsuario(usuario.getUsuario())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Ya existe un usuario con este nombre de usuario"));
             }
 
             Usuario nuevoUsuario = usuarioService.create(usuario);
@@ -79,6 +102,43 @@ public class UsuarioController {
             if (!usuarioService.findById(id).isPresent()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Usuario no encontrado"));
             }
+
+            // Validar campos requeridos
+            if (usuario.getCedula() == null || usuario.getCedula().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("La cédula es requerida"));
+            }
+            if (usuario.getNombre() == null || usuario.getNombre().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("El nombre es requerido"));
+            }
+            if (usuario.getEmail() == null || usuario.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("El email es requerido"));
+            }
+            if (usuario.getUsuario() == null || usuario.getUsuario().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("El nombre de usuario es requerido"));
+            }
+            if (usuario.getContraseña() == null || usuario.getContraseña().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("La contraseña es requerida"));
+            }
+            if (usuario.getRol() == null || usuario.getRol().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("El rol es requerido"));
+            }
+
+            // Verificar duplicados excluyendo el usuario actual
+            Optional<Usuario> usuarioPorCedula = usuarioService.findByCedula(usuario.getCedula());
+            if (usuarioPorCedula.isPresent() && !usuarioPorCedula.get().getId().equals(id)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Ya existe un usuario con esta cédula"));
+            }
+
+            Optional<Usuario> usuarioPorEmail = usuarioService.findByEmail(usuario.getEmail());
+            if (usuarioPorEmail.isPresent() && !usuarioPorEmail.get().getId().equals(id)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Ya existe un usuario con este email"));
+            }
+
+            Optional<Usuario> usuarioPorUsuario = usuarioService.findByUsuario(usuario.getUsuario());
+            if (usuarioPorUsuario.isPresent() && !usuarioPorUsuario.get().getId().equals(id)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Ya existe un usuario con este nombre de usuario"));
+            }
+
             usuario.setId(id);
             Usuario usuarioActualizado = usuarioService.update(usuario);
             return ResponseEntity.ok(ApiResponse.success("Usuario actualizado exitosamente", usuarioActualizado));

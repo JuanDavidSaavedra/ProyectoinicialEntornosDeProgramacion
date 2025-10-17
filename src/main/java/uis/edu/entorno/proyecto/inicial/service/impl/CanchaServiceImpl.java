@@ -1,10 +1,13 @@
 package uis.edu.entorno.proyecto.inicial.service.impl;
 
 import uis.edu.entorno.proyecto.inicial.model.Cancha;
+import uis.edu.entorno.proyecto.inicial.model.Reserva;
 import uis.edu.entorno.proyecto.inicial.repository.CanchaRepository;
+import uis.edu.entorno.proyecto.inicial.repository.ReservaRepository;
 import uis.edu.entorno.proyecto.inicial.service.ICanchaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +16,9 @@ public class CanchaServiceImpl implements ICanchaService {
 
     @Autowired
     private CanchaRepository canchaRepository;
+
+    @Autowired
+    private ReservaRepository reservaRepository;
 
     @Override
     public List<Cancha> findAll() {
@@ -45,7 +51,13 @@ public class CanchaServiceImpl implements ICanchaService {
     }
 
     @Override
+    @Transactional
     public void delete(Integer id) {
+        // Eliminar todas las reservas asociadas a la cancha primero
+        List<Reserva> reservasCancha = reservaRepository.findByCanchaId(id);
+        reservaRepository.deleteAll(reservasCancha);
+
+        // Luego eliminar la cancha
         canchaRepository.deleteById(id);
     }
 }

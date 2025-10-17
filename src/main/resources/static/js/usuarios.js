@@ -2,17 +2,14 @@
 if (document.getElementById('tablaUsuarios') || window.location.pathname.includes('form_usuarios.html')) {
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Verificar si el usuario está logueado
         if (!SessionHelper.isLoggedIn()) {
             window.location.href = 'index.html';
             return;
         }
 
-        // Solo ejecutar en páginas específicas
         if (document.getElementById('tablaUsuarios')) {
             const isAdmin = SessionHelper.isAdmin();
 
-            // Ocultar acciones si no es admin
             const adminActions = document.getElementById('adminActions');
             const actionsHeader = document.getElementById('actionsHeader');
             if (!isAdmin) {
@@ -47,7 +44,6 @@ async function cargarUsuarios() {
     try {
         const response = await RequestHelper.get('/usuarios');
 
-        // Verificar estructura de respuesta
         if (!response || !response.data) {
             console.error('Respuesta inválida:', response);
             return;
@@ -56,7 +52,6 @@ async function cargarUsuarios() {
         const usuarios = response.data;
         const tbody = document.getElementById('tablaUsuarios');
 
-        // Verificar que el elemento existe
         if (!tbody) {
             console.error('No se encontró el elemento tablaUsuarios');
             return;
@@ -80,7 +75,6 @@ async function cargarUsuarios() {
                 accionesHTML = '<span class="text-muted">Solo lectura</span>';
             }
 
-            // Determinar clase del badge según el rol
             let badgeClass = 'bg-secondary';
             if (usuario.rol === 'ADMIN') badgeClass = 'bg-danger';
             else if (usuario.rol === 'OPERATOR') badgeClass = 'bg-warning text-dark';
@@ -104,9 +98,10 @@ async function cargarUsuarios() {
 }
 
 async function eliminarUsuario(id) {
-    if (confirm('¿Está seguro de eliminar este usuario?')) {
+    if (confirm('¿Está seguro de eliminar este usuario? Se eliminarán también todas las reservas asociadas.')) {
         try {
             await RequestHelper.delete(`/usuarios/${id}`);
+            alert('Usuario eliminado correctamente');
             cargarUsuarios();
         } catch (error) {
             alert('Error al eliminar usuario: ' + error.message);
@@ -147,16 +142,23 @@ async function guardarUsuario(e) {
 
     try {
         if (usuarioId) {
-            usuarioData.id = parseInt(usuarioId);
+            // Actualizar usuario existente
             await RequestHelper.put(`/usuarios/${usuarioId}`, usuarioData);
             alert('Usuario actualizado correctamente');
         } else {
+            // Crear nuevo usuario
             await RequestHelper.post('/usuarios', usuarioData);
             alert('Usuario creado correctamente');
         }
 
+        // Redirigir a la lista de usuarios
         window.location.href = 'usuarios.html';
     } catch (error) {
-        alert('Error al guardar usuario: ' + error.message);
+        // Mostrar mensaje de error específico del backend
+        if (error.message.includes('Ya existe un usuario')) {
+            alert(error.message);
+        } else {
+            alert('Error al guardar usuario: ' + error.message);
+        }
     }
 }
