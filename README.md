@@ -70,29 +70,36 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 ## 🗃️ Diseño de la Base de Datos
 
 ### Diagrama Entidad-Relación
-![Diagrama de la Base de Datos](https://github.com/user-attachments/assets/44b89901-667a-409d-9092-09c8432555f4)
+<img width="952" height="472" alt="Diagrama de la BD" src="https://github.com/user-attachments/assets/25a45f4d-d894-4259-9d9d-fec4cd979547" />
+
 
 ### Entidades Principales
 
 #### 👤 **Usuarios**
 ```sql
-- id, nombre, email, contraseña, rol, fecha_registro, estado
+- id, cédula, nombre, email, usuario, contraseña, rol, created_at
 - Roles: ADMIN, OPERATOR, USER
-````
+- Contraseña encriptada con BCrypt
+```
 
 #### 🏟️ **Canchas**
-
 ```sql
-- id, nombre, deporte, ubicación, precio_hora, estado, descripción
+- id, nombre, deporte, ubicacion, precio_hora, capacidad, hora_apertura, hora_cierre, estado, creado_en
 - Deportes: Fútbol, Tenis, Baloncesto, Vóley, etc.
+- Estados: ACTIVA, INACTIVA
+- Capacidad máxima: 30-50 personas
+- Horario: 05:00 - 22:00
 ```
 
 #### 📅 **Reservas**
-
 ```sql
-- id, usuario_id, cancha_id, fecha, hora_inicio, hora_fin, estado, precio_total
-- Estados: ACTIVA, CANCELADA, COMPLETADA
+- id, usuario_id, cancha_id, fecha, hora_inicio, hora_fin, estado, creado_en
+- Estados: ACTIVA, FINALIZADA, CANCELADA
 ```
+
+### Relaciones
+- Un usuario puede tener muchas reservas
+- Una cancha puede tener muchas reservas
 
 ---
 
