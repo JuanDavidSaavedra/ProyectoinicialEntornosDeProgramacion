@@ -395,4 +395,4 @@ async function verificarYActualizarReservas() {
 document.addEventListener('DOMContentLoaded', () => {
     verificarYActualizarReservas();
     setInterval(verificarYActualizarReservas, 10000);
-});
+})
