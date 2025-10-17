@@ -77,7 +77,7 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 
 #### 👤 **Usuarios**
 ```sql
-- id, cédula, nombre, email, usuario, contraseña, rol, created_at
+- id, cédula, nombre, email, usuario, contraseña, rol, creado_en
 - Roles: ADMIN, OPERATOR, USER
 - Contraseña encriptada con BCrypt
 ```
