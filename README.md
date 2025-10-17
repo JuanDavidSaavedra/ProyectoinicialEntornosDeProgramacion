@@ -70,7 +70,8 @@ https://github.com/user-attachments/assets/31388d50-1ed3-4819-9732-073b00bfed24
 ## 🗃️ Diseño de la Base de Datos
 
 ### Diagrama Entidad-Relación
-![Diagrama de la Base de Datos](https://github.com/user-attachments/assets/44b89901-667a-409d-9092-09c8432555b4)
+<img width="952" height="472" alt="Diagrama de la BD" src="https://github.com/user-attachments/assets/25a45f4d-d894-4259-9d9d-fec4cd979547" />
+
 
 ### Entidades Principales
 
